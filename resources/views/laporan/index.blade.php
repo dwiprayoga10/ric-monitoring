@@ -1,227 +1,352 @@
 <x-app-layout>
 
     <x-slot name="header">
-        <h2 class="font-bold text-3xl text-slate-800">
-            Laporan SWDKLLJ
-        </h2>
-    </x-slot>
 
-    <div class="py-8">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
 
-        <div class="max-w-[95%] mx-auto space-y-6">
+            <div>
 
-            <!-- FILTER -->
-            <div class="bg-white rounded-3xl shadow border p-6">
+                <h2 class="text-2xl font-bold text-slate-800">
+                    Laporan SWDKLLJ Petugas
+                </h2>
 
-                <form method="GET" action="{{ route('laporan') }}">
-
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-
-                        <div>
-
-                            <label class="text-sm text-slate-600">
-                                Status
-                            </label>
-
-                            <select
-                                name="status"
-                                class="w-full border rounded-2xl p-3 mt-2"
-                            >
-                                <option value="">Semua</option>
-
-                                <option value="LUNAS"
-                                    {{ request('status') == 'LUNAS' ? 'selected' : '' }}>
-                                    LUNAS
-                                </option>
-
-                                <option value="DP"
-                                    {{ request('status') == 'DP' ? 'selected' : '' }}>
-                                    DP
-                                </option>
-
-                                <option value="BELUM"
-                                    {{ request('status') == 'BELUM' ? 'selected' : '' }}>
-                                    BELUM
-                                </option>
-
-                            </select>
-
-                        </div>
-
-                        <div>
-
-                            <label class="text-sm text-slate-600">
-                                Tanggal Awal
-                            </label>
-
-                            <input
-                                type="date"
-                                name="tanggal_awal"
-                                value="{{ request('tanggal_awal') }}"
-                                class="w-full border rounded-2xl p-3 mt-2"
-                            >
-
-                        </div>
-
-                        <div>
-
-                            <label class="text-sm text-slate-600">
-                                Tanggal Akhir
-                            </label>
-
-                            <input
-                                type="date"
-                                name="tanggal_akhir"
-                                value="{{ request('tanggal_akhir') }}"
-                                class="w-full border rounded-2xl p-3 mt-2"
-                            >
-
-                        </div>
-
-                        <div class="flex items-end gap-3">
-
-                            <button
-                                type="submit"
-                                class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl font-semibold"
-                            >
-                                Filter
-                            </button>
-
-                            <button
-                                type="button"
-                                onclick="window.print()"
-                                class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-2xl font-semibold"
-                            >
-                                Print
-                            </button>
-
-                        </div>
-
-                    </div>
-
-                </form>
+                <p class="text-sm text-slate-500 mt-1">
+                    Rekap monitoring seluruh petugas lapangan
+                </p>
 
             </div>
 
-            <!-- CARD -->
-            <div class="bg-white rounded-3xl shadow border p-6">
+            <div class="flex items-center gap-3 bg-slate-100 border border-slate-200 px-5 py-3 rounded-2xl">
 
-                <div class="flex justify-between items-center">
+                <i data-lucide="users" class="w-5 h-5 text-blue-600"></i>
 
-                    <div>
+                <div>
 
-                        <h3 class="text-2xl font-bold text-slate-800">
-                            Total Laporan
-                        </h3>
+                    <p class="text-xs text-slate-500">
+                        Total Petugas
+                    </p>
 
-                        <p class="text-slate-500 mt-1">
-                            Data hasil filter laporan
-                        </p>
-
-                    </div>
-
-                    <div class="text-5xl font-bold text-blue-600">
-                        {{ $total }}
-                    </div>
+                    <p class="font-semibold text-slate-800">
+                        {{ $totalPetugas }}
+                    </p>
 
                 </div>
 
             </div>
 
-            <!-- TABLE -->
-            <div class="bg-white rounded-3xl shadow border p-6">
+        </div>
 
-                <div class="overflow-x-auto rounded-2xl border">
+    </x-slot>
 
-                    <table class="w-full min-w-[1400px]">
+    <div class="py-6">
 
-                        <thead class="bg-slate-100">
+        <div class="page-container space-y-6">
 
-                            <tr class="text-sm uppercase text-slate-600">
+            
+            {{-- SUMMARY --}}
+            <div class="grid grid-cols-2 xl:grid-cols-4 gap-4">
 
-                                <th class="text-left px-4 py-4">NOPOL</th>
-                                <th class="text-left px-4 py-4">NAMA WP</th>
-                                <th class="text-left px-4 py-4">NO HP</th>
-                                <th class="text-left px-4 py-4">STATUS</th>
-                                <th class="text-left px-4 py-4">SOURCE FILE</th>
-                                <th class="text-left px-4 py-4">TANGGAL</th>
+                <div class="card-ui rounded-[28px] p-5">
 
-                            </tr>
+                    <p class="text-sm text-slate-500">
+                        Total Target
+                    </p>
 
-                        </thead>
+                    <h3 class="text-3xl font-bold text-slate-800 mt-2">
+                        {{ number_format($totalTarget) }}
+                    </h3>
 
-                        <tbody>
+                </div>
 
-                            @forelse($data as $item)
+                <div class="card-ui rounded-[28px] p-5">
 
-                                <tr class="border-b hover:bg-slate-50">
+                    <p class="text-sm text-slate-500">
+                        Total Lunas
+                    </p>
 
-                                    <td class="px-4 py-4 font-semibold">
-                                        {{ $item->nopol }}
+                    <h3 class="text-3xl font-bold text-green-600 mt-2">
+                        {{ number_format($totalLunas) }}
+                    </h3>
+
+                </div>
+
+                <div class="card-ui rounded-[28px] p-5">
+
+                    <p class="text-sm text-slate-500">
+                        Belum Bayar
+                    </p>
+
+                    <h3 class="text-3xl font-bold text-red-500 mt-2">
+                        {{ number_format($totalBelum) }}
+                    </h3>
+
+                </div>
+
+                <div class="card-ui rounded-[28px] p-5">
+
+                    <p class="text-sm text-slate-500">
+                        Total Nominal
+                    </p>
+
+                    <h3 class="text-2xl font-bold text-blue-600 mt-2">
+                        Rp {{ number_format($grandNominal, 0, ',', '.') }}
+                    </h3>
+
+                </div>
+
+            </div>
+
+            {{-- TABLE --}}
+            <div class="card-ui rounded-[28px] p-5">
+
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-5">
+
+    <div>
+
+        <h3 class="font-bold text-lg text-slate-800">
+            Rekap Kinerja Petugas
+        </h3>
+
+        <p class="text-sm text-slate-500">
+            Monitoring penyelesaian SWDKLLJ petugas lapangan
+        </p>
+
+    </div>
+
+    {{-- FILTER PETUGAS --}}
+    <form
+        method="GET"
+        action="{{ route('laporan') }}"
+        class="flex items-center gap-2"
+    >
+
+        <select
+            name="petugas"
+            onchange="this.form.submit()"
+            class="bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm min-w-[260px]"
+        >
+
+            <option value="">
+                Semua Petugas
+            </option>
+
+            @foreach($petugasList as $petugas)
+
+                <option
+                    value="{{ trim($petugas) }}"
+                    @selected(
+                        trim(request('petugas'))
+                        ==
+                        trim($petugas)
+                    )
+                >
+                    {{ trim($petugas) }}
+                </option>
+
+            @endforeach
+
+        </select>
+
+        @if(request('petugas'))
+
+            <a
+                href="{{ route('laporan') }}"
+                class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-3 rounded-2xl text-sm font-medium"
+            >
+                Reset
+            </a>
+
+        @endif
+
+    </form>
+
+</div>
+
+                <div class="overflow-hidden rounded-[24px] border border-slate-200">
+
+                    <div class="overflow-x-auto">
+
+                        <table class="w-full min-w-[1900px]">
+
+                            <thead class="bg-slate-100">
+
+                                <tr class="text-xs uppercase text-slate-600">
+
+                                    <th class="px-4 py-4 text-left">
+                                        Petugas
+                                    </th>
+
+                                    <th class="px-4 py-4 text-center">
+                                        Target
+                                    </th>
+
+                                    <th class="px-4 py-4 text-center">
+                                        DP (Mobil)
+                                    </th>
+
+                                    <th class="px-4 py-4 text-center">
+                                        CI (Motor)
+                                    </th>
+
+                                    <th class="px-4 py-4 text-center">
+                                        Penyerahan
+                                    </th>
+
+                                    <th class="px-4 py-4 text-center">
+                                        Kepemilikan
+                                    </th>
+
+                                    <th class="px-4 py-4 text-center">
+                                        Lunas
+                                    </th>
+
+                                    <th class="px-4 py-4 text-center">
+                                        Belum
+                                    </th>
+
+                                    <th class="px-4 py-4 text-center">
+                                        Online
+                                    </th>
+
+                                    <th class="px-4 py-4 text-center">
+                                        Konvensional
+                                    </th>
+
+                                    <th class="px-4 py-4 text-center">
+                                        Nominal
+                                    </th>
+
+                                    <th class="px-4 py-4 text-center">
+                                        Progress
+                                    </th>
+
+                                    <th class="px-4 py-4 text-center">
+                                        Detail
+                                    </th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody class="bg-white">
+
+                                @forelse($laporanPetugas as $item)
+
+                                <tr class="border-b border-slate-100 hover:bg-slate-50">
+
+                                    <td class="px-4 py-4">
+
+                                        <div>
+
+                                            <p class="font-semibold text-slate-800">
+                                                {{ $item->nama_ric }}
+                                            </p>
+
+                                            <p class="text-xs text-slate-500">
+                                                {{ $item->id_petugas }}
+                                            </p>
+
+                                        </div>
+
+                                    </td>
+
+                                    <td class="text-center font-semibold">
+                                        {{ $item->total_target }}
+                                    </td>
+
+                                    <td class="text-center">
+                                        {{ $item->total_dp }}
+                                    </td>
+
+                                    <td class="text-center">
+                                        {{ $item->total_ci }}
+                                    </td>
+
+                                    <td class="text-center">
+                                        {{ $item->total_penyerahan }}
+                                    </td>
+
+                                    <td class="text-center">
+                                        {{ $item->total_kepemilikan }}
+                                    </td>
+
+                                    <td class="text-center text-green-600 font-bold">
+                                        {{ $item->lunas }}
+                                    </td>
+
+                                    <td class="text-center text-red-500 font-bold">
+                                        {{ $item->belum }}
+                                    </td>
+
+                                    <td class="text-center text-blue-600 font-semibold">
+                                        {{ $item->online }}
+                                    </td>
+
+                                    <td class="text-center text-violet-600 font-semibold">
+                                        {{ $item->konvensional }}
+                                    </td>
+
+                                    <td class="text-center font-bold text-slate-800">
+                                        Rp {{ number_format($item->total_nominal,0,',','.') }}
                                     </td>
 
                                     <td class="px-4 py-4">
-                                        {{ $item->nama_wp }}
-                                    </td>
 
-                                    <td class="px-4 py-4">
-                                        {{ $item->no_hp }}
-                                    </td>
+                                        <div class="w-[140px] mx-auto">
 
-                                    <td class="px-4 py-4">
+                                            <div class="flex justify-between text-xs mb-1">
+                                                <span>
+                                                    {{ $item->persen_penyerahan }}%
+                                                </span>
+                                            </div>
 
-                                        @if($item->status_bayar == 'LUNAS')
+                                            <div class="h-2 bg-slate-200 rounded-full overflow-hidden">
 
-                                            <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm">
-                                                LUNAS
-                                            </span>
+                                                <div
+                                                    class="h-full bg-green-500 rounded-full"
+                                                    style="width: {{ $item->persen_penyerahan }}%"
+                                                ></div>
 
-                                        @elseif($item->status_bayar == 'DP')
+                                            </div>
 
-                                            <span class="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-sm">
-                                                DP
-                                            </span>
-
-                                        @else
-
-                                            <span class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm">
-                                                BELUM
-                                            </span>
-
-                                        @endif
+                                        </div>
 
                                     </td>
 
-                                    <td class="px-4 py-4 text-slate-500 text-sm">
-                                        {{ $item->source_file }}
-                                    </td>
+                                    <td class="text-center">
 
-                                    <td class="px-4 py-4 text-slate-500 text-sm">
-                                        {{ $item->created_at->format('d M Y') }}
+                                        <a
+                                            href="{{ route('laporan.petugas', $item->nama_ric) }}"
+                                            class="inline-flex items-center px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium"
+                                        >
+                                            Detail
+                                        </a>
+
                                     </td>
 
                                 </tr>
 
-                            @empty
+                                @empty
 
                                 <tr>
 
-                                    <td colspan="6" class="text-center py-10 text-slate-400">
+                                    <td
+                                        colspan="13"
+                                        class="text-center py-10 text-slate-400"
+                                    >
                                         Tidak ada data laporan
                                     </td>
 
                                 </tr>
 
-                            @endforelse
+                                @endforelse
 
-                        </tbody>
+                            </tbody>
 
-                    </table>
+                        </table>
 
-                </div>
+                    </div>
 
-                <div class="mt-6">
-                    {{ $data->links() }}
                 </div>
 
             </div>

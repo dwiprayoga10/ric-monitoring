@@ -6,23 +6,24 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::table('swdklljs', function (Blueprint $table) {
-             $table->string('source_file')->nullable();
+
+            $table->enum('metode_pembayaran', [
+                'online',
+                'konvensional'
+            ])->nullable()->after('status_bayar');
+
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::table('swdklljs', function (Blueprint $table) {
-             $table->dropColumn('source_file');
+
+            $table->dropColumn('metode_pembayaran');
+
         });
     }
 };

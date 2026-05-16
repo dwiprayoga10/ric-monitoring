@@ -6,13 +6,12 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('swdklljs', function (Blueprint $table) {
-             $table->id();
+            $table->id();
+
+            $table->integer('no')->nullable();
 
             $table->string('id_petugas')->nullable();
 
@@ -26,6 +25,8 @@ return new class extends Migration
 
             $table->date('masa_berlaku')->nullable();
 
+            $table->string('gol')->nullable();
+
             $table->string('no_hp')->nullable();
 
             $table->string('status_penyerahan')->nullable();
@@ -34,13 +35,14 @@ return new class extends Migration
 
             $table->string('status_bayar')->nullable();
 
+            $table->decimal('nominal_bayar', 15, 2)->nullable();
+
+            $table->string('source_file')->nullable();
+
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('swdklljs');

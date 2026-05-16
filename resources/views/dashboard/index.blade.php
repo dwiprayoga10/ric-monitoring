@@ -1,63 +1,86 @@
+{{-- dashboard index blade --}}
 <x-app-layout>
 
     <x-slot name="header">
-        <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
 
             <div>
-                <h2 class="font-bold text-3xl text-slate-800">
+
+                <h2 class="text-2xl font-bold text-slate-800">
                     Dashboard SWDKLLJ
                 </h2>
 
                 <p class="text-sm text-slate-500 mt-1">
-                    Monitoring data Jasa Raharja
+                    Monitoring pembayaran kendaraan Jasa Raharja
                 </p>
+
             </div>
 
-            <div class="bg-white shadow rounded-2xl px-5 py-3 border border-slate-100">
-                <p class="text-sm text-slate-500">
-                    Hari Ini
-                </p>
+            <div class="flex items-center gap-3 bg-blue-600 text-white px-5 py-3 rounded-2xl shadow-sm">
 
-                <p class="font-bold text-slate-800">
-                    {{ now()->format('d M Y') }}
-                </p>
-            </div>
+                <i data-lucide="calendar-days" class="w-5 h-5"></i>
 
-        </div>
-    </x-slot>
+                <div>
 
-    <div class="py-8">
+                    <p class="text-xs text-blue-100">
+                        Hari Ini
+                    </p>
 
-        <div class="max-w-[98%] mx-auto space-y-8">
-
-            <!-- IMPORT -->
-            <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6">
-
-                <div class="mb-6">
-
-                    <h3 class="text-2xl font-bold text-slate-800">
-                        Import Data Excel / CSV
-                    </h3>
-
-                    <p class="text-slate-500 text-sm mt-1">
-                        Upload banyak file SWDKLLJ
+                    <p class="font-semibold text-sm">
+                        {{ now()->format('d M Y') }}
                     </p>
 
                 </div>
 
+            </div>
+
+        </div>
+
+    </x-slot>
+
+    <div class="py-6">
+
+        <div class="page-container space-y-6">
+
+            <!-- IMPORT -->
+            <div class="card-ui rounded-[28px] p-6">
+
+                <div class="flex items-center gap-3 mb-5">
+
+                    <div class="h-12 w-12 rounded-2xl bg-blue-100 flex items-center justify-center">
+
+                        <i data-lucide="file-up" class="w-5 h-5 text-blue-600"></i>
+
+                    </div>
+
+                    <div>
+
+                        <h3 class="font-bold text-lg text-slate-800">
+                            Import Data
+                        </h3>
+
+                        <p class="text-sm text-slate-500">
+                            Upload file Excel / CSV SWDKLLJ
+                        </p>
+
+                    </div>
+
+                </div>
+
                 @if(session('success'))
-                    <div class="bg-green-100 border border-green-200 text-green-700 px-4 py-3 rounded-2xl mb-4">
+                    <div class="mb-5 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-2xl text-sm">
                         {{ session('success') }}
                     </div>
                 @endif
 
                 @if ($errors->any())
-                    <div class="bg-red-100 border border-red-200 text-red-700 px-4 py-3 rounded-2xl mb-4">
+                    <div class="mb-5 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-2xl text-sm">
 
-                        <ul class="list-disc pl-5 space-y-1">
+                        <ul class="space-y-1">
 
                             @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
+                                <li>• {{ $error }}</li>
                             @endforeach
 
                         </ul>
@@ -69,7 +92,7 @@
                     action="{{ route('import.excel') }}"
                     method="POST"
                     enctype="multipart/form-data"
-                    class="flex flex-col md:flex-row gap-4"
+                    class="grid lg:grid-cols-[1fr_auto] gap-4"
                 >
 
                     @csrf
@@ -78,13 +101,14 @@
                         type="file"
                         name="files[]"
                         multiple
-                        class="w-full border border-slate-300 rounded-2xl p-3"
+                        class="w-full border border-slate-300 rounded-2xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
 
                     <button
                         type="submit"
-                        class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-2xl transition font-semibold"
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-2xl font-semibold transition flex items-center justify-center gap-2"
                     >
+                        <i data-lucide="upload-cloud" class="w-4 h-4"></i>
                         Import
                     </button>
 
@@ -92,99 +116,85 @@
 
             </div>
 
-            <!-- CARD -->
-            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+            <!-- STATS -->
+            <div class="grid grid-cols-2 xl:grid-cols-3 gap-4">
 
-                <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6">
+                <!-- TOTAL -->
+                <div class="card-ui rounded-[28px] p-5">
 
                     <div class="flex justify-between items-start">
 
                         <div>
 
-                            <h3 class="text-slate-500 text-sm">
+                            <p class="text-sm text-slate-500">
                                 Total Data
-                            </h3>
+                            </p>
 
-                            <p class="text-4xl font-bold mt-4 text-slate-800">
+                            <h3 class="text-3xl font-bold text-slate-800 mt-3">
                                 {{ $totalData }}
-                            </p>
+                            </h3>
 
                         </div>
 
-                        <div class="bg-blue-100 text-blue-600 p-4 rounded-2xl text-2xl">
-                            📊
+                        <div class="h-12 w-12 rounded-2xl bg-blue-100 flex items-center justify-center">
+
+                            <i data-lucide="database" class="w-5 h-5 text-blue-600"></i>
+
                         </div>
 
                     </div>
 
                 </div>
 
-                <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6">
+                <!-- LUNAS -->
+                <div class="card-ui rounded-[28px] p-5">
 
                     <div class="flex justify-between items-start">
 
                         <div>
 
-                            <h3 class="text-slate-500 text-sm">
+                            <p class="text-sm text-slate-500">
                                 Sudah Bayar
-                            </h3>
+                            </p>
 
-                            <p class="text-4xl font-bold mt-4 text-green-600">
+                            <h3 class="text-3xl font-bold text-green-600 mt-3">
                                 {{ $sudahBayar }}
-                            </p>
-
-                        </div>
-
-                        <div class="bg-green-100 text-green-600 p-4 rounded-2xl text-2xl">
-                            💰
-                        </div>
-
-                    </div>
-
-                </div>
-
-                <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6">
-
-                    <div class="flex justify-between items-start">
-
-                        <div>
-
-                            <h3 class="text-slate-500 text-sm">
-                                DP
                             </h3>
 
-                            <p class="text-4xl font-bold mt-4 text-orange-500">
-                                {{ $dp }}
-                            </p>
-
                         </div>
 
-                        <div class="bg-orange-100 text-orange-500 p-4 rounded-2xl text-2xl">
-                            🚗
+                        <div class="h-12 w-12 rounded-2xl bg-green-100 flex items-center justify-center">
+
+                            <i data-lucide="badge-check" class="w-5 h-5 text-green-600"></i>
+
                         </div>
 
                     </div>
 
                 </div>
 
-                <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6">
+
+                <!-- BELUM -->
+                <div class="card-ui rounded-[28px] p-5">
 
                     <div class="flex justify-between items-start">
 
                         <div>
 
-                            <h3 class="text-slate-500 text-sm">
+                            <p class="text-sm text-slate-500">
                                 Belum Bayar
-                            </h3>
-
-                            <p class="text-4xl font-bold mt-4 text-red-500">
-                                {{ $belumBayar }}
                             </p>
+
+                            <h3 class="text-3xl font-bold text-red-500 mt-3">
+                                {{ $belumBayar }}
+                            </h3>
 
                         </div>
 
-                        <div class="bg-red-100 text-red-500 p-4 rounded-2xl text-2xl">
-                            🎯
+                        <div class="h-12 w-12 rounded-2xl bg-red-100 flex items-center justify-center">
+
+                            <i data-lucide="circle-x" class="w-5 h-5 text-red-500"></i>
+
                         </div>
 
                     </div>
@@ -192,54 +202,93 @@
                 </div>
 
             </div>
+                    <!-- CHART + MONITORING -->
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
 
-            <!-- CHART -->
-            <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                <!-- CHART -->
+                <div class="xl:col-span-2 card-ui rounded-[28px] p-5">
 
-                <div class="xl:col-span-2 bg-white rounded-3xl shadow-sm border border-slate-200 p-6">
-
-                    <div class="mb-6">
-
-                        <h3 class="text-2xl font-bold text-slate-800">
-                            Statistik SWDKLLJ
-                        </h3>
-
-                        <p class="text-slate-500 text-sm mt-1">
-                            Monitoring pencapaian pembayaran
-                        </p>
-
-                    </div>
-
-                    <div id="chart"></div>
-
-                </div>
-
-                <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6">
-
-                    <h3 class="text-2xl font-bold text-slate-800">
-                        Status Monitoring
-                    </h3>
-
-                    <div class="mt-8 space-y-8">
+                    <div class="flex items-center justify-between mb-5">
 
                         <div>
 
-                            <div class="flex justify-between mb-3">
+                            <h3 class="font-bold text-lg text-slate-800">
+                                Statistik SWDKLLJ
+                            </h3>
 
-                                <span class="text-slate-600">
-                                    Sudah Bayar
-                                </span>
+                            <p class="text-sm text-slate-500">
+                                Monitoring pembayaran kendaraan
+                            </p>
 
-                                <span class="font-bold text-green-600">
+                        </div>
+
+                        <div class="h-11 w-11 rounded-2xl bg-blue-100 flex items-center justify-center">
+
+                            <i data-lucide="bar-chart-3" class="w-5 h-5 text-blue-600"></i>
+
+                        </div>
+
+                    </div>
+
+                    <div
+                        id="chart"
+                        class="min-h-[260px]"
+                    ></div>
+
+                </div>
+
+                <!-- MONITORING -->
+                <div class="card-ui rounded-[28px] p-5">
+
+                    <div class="flex items-center justify-between mb-6">
+
+                        <div>
+
+                            <h3 class="font-bold text-lg text-slate-800">
+                                Status Monitoring
+                            </h3>
+
+                            <p class="text-sm text-slate-500">
+                                Persentase pembayaran
+                            </p>
+
+                        </div>
+
+                        <div class="h-11 w-11 rounded-2xl bg-cyan-100 flex items-center justify-center">
+
+                            <i data-lucide="activity" class="w-5 h-5 text-cyan-600"></i>
+
+                        </div>
+
+                    </div>
+
+                    <div class="space-y-6">
+
+                        <!-- LUNAS -->
+                        <div>
+
+                            <div class="flex justify-between mb-2">
+
+                                <div class="flex items-center gap-2">
+
+                                    <span class="w-2.5 h-2.5 rounded-full bg-green-500"></span>
+
+                                    <span class="text-sm font-medium text-slate-700">
+                                        Sudah Bayar
+                                    </span>
+
+                                </div>
+
+                                <span class="font-bold text-green-600 text-sm">
                                     {{ $sudahBayar }}
                                 </span>
 
                             </div>
 
-                            <div class="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
+                            <div class="w-full h-2.5 rounded-full bg-slate-200 overflow-hidden">
 
                                 <div
-                                    class="bg-green-500 h-3 rounded-full"
+                                    class="bg-green-500 h-full rounded-full"
                                     style="width: {{ $totalData > 0 ? ($sudahBayar / $totalData) * 100 : 0 }}%"
                                 ></div>
 
@@ -247,49 +296,32 @@
 
                         </div>
 
+
+                        <!-- BELUM -->
                         <div>
 
-                            <div class="flex justify-between mb-3">
+                            <div class="flex justify-between mb-2">
 
-                                <span class="text-slate-600">
-                                    DP
-                                </span>
+                                <div class="flex items-center gap-2">
 
-                                <span class="font-bold text-orange-500">
-                                    {{ $dp }}
-                                </span>
+                                    <span class="w-2.5 h-2.5 rounded-full bg-red-500"></span>
 
-                            </div>
+                                    <span class="text-sm font-medium text-slate-700">
+                                        Belum Bayar
+                                    </span>
 
-                            <div class="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
+                                </div>
 
-                                <div
-                                    class="bg-orange-500 h-3 rounded-full"
-                                    style="width: {{ $totalData > 0 ? ($dp / $totalData) * 100 : 0 }}%"
-                                ></div>
-
-                            </div>
-
-                        </div>
-
-                        <div>
-
-                            <div class="flex justify-between mb-3">
-
-                                <span class="text-slate-600">
-                                    Belum Bayar
-                                </span>
-
-                                <span class="font-bold text-red-500">
+                                <span class="font-bold text-red-500 text-sm">
                                     {{ $belumBayar }}
                                 </span>
 
                             </div>
 
-                            <div class="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
+                            <div class="w-full h-2.5 rounded-full bg-slate-200 overflow-hidden">
 
                                 <div
-                                    class="bg-red-500 h-3 rounded-full"
+                                    class="bg-red-500 h-full rounded-full"
                                     style="width: {{ $totalData > 0 ? ($belumBayar / $totalData) * 100 : 0 }}%"
                                 ></div>
 
@@ -299,37 +331,104 @@
 
                     </div>
 
+                    <!-- SUMMARY -->
+                    <div class="mt-6 pt-5 border-t border-slate-200">
+
+                        <div class="grid grid-cols-2 gap-4">
+
+                            <div class="bg-slate-50 rounded-2xl p-4">
+
+                                <p class="text-xs text-slate-500">
+                                    Total Kendaraan
+                                </p>
+
+                                <h4 class="font-bold text-xl text-slate-800 mt-1">
+                                    {{ $totalData }}
+                                </h4>
+
+                            </div>
+
+                            <div class="bg-slate-50 rounded-2xl p-4">
+
+                                <p class="text-xs text-slate-500">
+                                    Lunas
+                                </p>
+
+                                <h4 class="font-bold text-xl text-green-600 mt-1">
+                                    {{ $sudahBayar }}
+                                </h4>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
                 </div>
 
             </div>
+                        <!-- TABLE -->
+            <div class="card-ui rounded-[28px] p-5">
 
-            <!-- TABLE -->
-            <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6">
+                <!-- HEADER -->
+                <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 mb-5">
+
+                    <div>
+
+                        <h3 class="font-bold text-lg text-slate-800">
+                            Data Monitoring SWDKLLJ
+                        </h3>
+
+                        <p class="text-sm text-slate-500 mt-1">
+                            Data kendaraan hasil import
+                        </p>
+
+                    </div>
+
+                </div>
 
                 <!-- SEARCH -->
-                <form method="GET" action="{{ route('dashboard') }}" class="mb-6">
+                <form
+                    method="GET"
+                    action="{{ route('dashboard') }}"
+                    class="mb-5"
+                >
 
-                    <div class="flex flex-col md:flex-row gap-4">
+                    <div class="grid lg:grid-cols-[1fr_auto_auto] gap-3">
 
-                        <input
-                            type="text"
-                            name="search"
-                            value="{{ request('search') }}"
-                            placeholder="Cari nopol, nama wp, alamat, no hp..."
-                            class="w-full border border-slate-300 rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
+                        <!-- INPUT -->
+                        <div class="relative">
 
+                            <i
+                                data-lucide="search"
+                                class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"
+                            ></i>
+
+                            <input
+                                type="text"
+                                name="search"
+                                value="{{ request('search') }}"
+                                placeholder="Cari nopol, nama WP, alamat, no hp..."
+                                class="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-12 pr-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                            >
+
+                        </div>
+
+                        <!-- SEARCH BTN -->
                         <button
                             type="submit"
-                            class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl font-semibold transition"
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl font-medium transition flex items-center justify-center gap-2"
                         >
+                            <i data-lucide="search" class="w-4 h-4"></i>
                             Search
                         </button>
 
+                        <!-- RESET BTN -->
                         <a
                             href="{{ route('dashboard') }}"
-                            class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-6 py-3 rounded-2xl font-semibold transition text-center"
+                            class="bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 px-6 py-3 rounded-2xl font-medium transition flex items-center justify-center gap-2"
                         >
+                            <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
                             Reset
                         </a>
 
@@ -337,147 +436,205 @@
 
                 </form>
 
-                <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
+                <!-- TABLE -->
+                <div class="overflow-hidden rounded-[24px] border border-slate-200">
 
-                    <div>
+                    <div class="overflow-x-auto">
 
-                        <h3 class="text-2xl font-bold text-slate-800">
-                            Data Monitoring SWDKLLJ
-                        </h3>
+                        <table class="w-full min-w-[1700px]">
 
-                        <p class="text-slate-500 text-sm mt-1">
-                            Data kendaraan hasil import CSV
-                        </p>
+                            <thead class="bg-slate-100">
+
+                                <tr class="text-slate-600 text-xs uppercase">
+
+                                    <th class="text-left py-4 px-4">ID</th>
+                                    <th class="text-left py-4 px-4">RIC</th>
+                                    <th class="text-left py-4 px-4">NOPOL</th>
+                                    <th class="text-left py-4 px-4">NAMA WP</th>
+                                    <th class="text-left py-4 px-4">ALAMAT</th>
+                                    <th class="text-left py-4 px-4">MASA BERLAKU</th>
+                                    <th class="text-left py-4 px-4">GOL</th>
+                                    <th class="text-left py-4 px-4">NO HP</th>
+                                    <th class="text-left py-4 px-4">PENYERAHAN</th>
+                                    <th class="text-left py-4 px-4">KEPEMILIKAN</th>
+                                    <th class="text-left py-4 px-4">STATUS</th>
+                                    <th class="text-left py-4 px-4">METODE</th>
+                                    <th class="text-left py-4 px-4">NOMINAL BAYAR</th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody>
+
+                                @forelse ($data as $item)
+
+                                    <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
+
+                                        <td class="py-4 px-4 text-sm text-slate-700">
+                                            {{ $item->id_petugas ?? '-' }}
+                                        </td>
+
+                                        <td class="py-4 px-4 text-sm font-medium">
+                                            {{ $item->nama_ric ?? '-' }}
+                                        </td>
+
+                                        <td class="py-4 px-4">
+
+                                            <span class="bg-slate-100 px-3 py-1 rounded-xl text-sm font-semibold text-slate-800">
+                                                {{ $item->nopol ?? '-' }}
+                                            </span>
+
+                                        </td>
+
+                                        <td class="py-4 px-4 text-sm">
+                                            {{ $item->nama_wp ?? '-' }}
+                                        </td>
+
+                                        <td class="py-4 px-4 text-sm max-w-[220px] whitespace-normal text-slate-600">
+                                            {{ $item->alamat ?? '-' }}
+                                        </td>
+
+                                        <td class="py-4 px-4 text-sm">
+    {{ $item->masa_berlaku
+        ? \Carbon\Carbon::parse($item->masa_berlaku)->format('d-m-Y')
+        : '-'
+    }}
+</td>
+
+                                        <td class="py-4 px-4 text-sm">
+                                            {{ $item->gol ?? '-' }}
+                                        </td>
+
+                                        <td class="py-4 px-4 text-sm">
+                                            {{ $item->no_hp ?? '-' }}
+                                        </td>
+
+                                        <td class="py-4 px-4 text-sm">
+                                            {{ $item->status_penyerahan ?? '-' }}
+                                        </td>
+
+                                        <td class="py-4 px-4 text-sm">
+                                            {{ $item->status_kepemilikan ?? '-' }}
+                                        </td>
+
+                                        <td class="py-4 px-4">
+
+                                            @php
+                                                $status = strtoupper($item->status_bayar ?? 'BELUM');
+                                            @endphp
+
+                                            @if($status == 'LUNAS')
+
+                                                <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-semibold">
+                                                    LUNAS
+                                                </span>
+
+                                            @elseif($status == 'DP')
+
+                                                <span class="bg-orange-100 text-orange-600 px-3 py-1 rounded-full text-xs font-semibold">
+                                                    DP
+                                                </span>
+
+                                            @else
+
+                                                <span class="bg-red-100 text-red-600 px-3 py-1 rounded-full text-xs font-semibold">
+                                                    BELUM
+                                                </span>
+
+                                            @endif
+
+                                        </td>
+                                        <!-- METODE PEMBAYARAN -->
+<td class="py-4 px-4 text-center">
+
+    @php
+        $metode = strtolower($item->metode_pembayaran ?? '');
+    @endphp
+
+    @if($status !== 'LUNAS')
+
+        <span class="text-slate-400 text-sm">
+            -
+        </span>
+
+    @elseif($metode == 'online')
+
+        <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-semibold">
+            ONLINE
+        </span>
+
+    @elseif($metode == 'konvensional')
+
+        <span class="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-xs font-semibold">
+            KONVENSIONAL
+        </span>
+
+    @else
+
+        <span class="text-slate-400 text-sm">
+            -
+        </span>
+
+    @endif
+
+</td>
+
+                                        <td class="py-4 px-4 text-sm font-semibold text-green-600 text-right">
+
+    @if($item->nominal_bayar)
+
+        Rp {{ number_format($item->nominal_bayar, 0, ',', '.') }}
+
+    @else
+
+        -
+
+    @endif
+
+</td>
+
+                                    </tr>
+
+                                @empty
+
+                                    <tr>
+
+                                        <td colspan="13" class="text-center py-14">
+
+                                            <div class="flex flex-col items-center">
+
+                                                <i
+                                                    data-lucide="database-x"
+                                                    class="w-10 h-10 text-slate-300 mb-3"
+                                                ></i>
+
+                                                <h4 class="font-semibold text-slate-700">
+                                                    Belum ada data
+                                                </h4>
+
+                                                <p class="text-sm text-slate-400">
+                                                    Silakan import data terlebih dahulu
+                                                </p>
+
+                                            </div>
+
+                                        </td>
+
+                                    </tr>
+
+                                @endforelse
+
+                            </tbody>
+
+                        </table>
 
                     </div>
 
                 </div>
 
-                <div class="overflow-x-auto rounded-2xl border border-slate-200">
-
-                    <table class="w-full min-w-[2100px]">
-
-                        <thead class="bg-slate-100">
-
-                            <tr class="text-slate-600 text-sm uppercase">
-
-                                <th class="text-left py-4 px-4">ID PETUGAS</th>
-                                <th class="text-left py-4 px-4">NAMA RIC</th>
-                                <th class="text-left py-4 px-4">NOPOL</th>
-                                <th class="text-left py-4 px-4">NAMA WP</th>
-                                <th class="text-left py-4 px-4">ALAMAT</th>
-                                <th class="text-left py-4 px-4">MASA BERLAKU</th>
-                                <th class="text-left py-4 px-4">GOL</th>
-                                <th class="text-left py-4 px-4">NO HP</th>
-                                <th class="text-left py-4 px-4">STATUS PENYERAHAN</th>
-                                <th class="text-left py-4 px-4">STATUS KEPEMILIKAN</th>
-                                <th class="text-left py-4 px-4">STATUS BAYAR</th>
-                                <th class="text-left py-4 px-4">SOURCE FILE</th>
-
-                            </tr>
-
-                        </thead>
-
-                        <tbody>
-
-                            @forelse ($data as $item)
-
-                                <tr class="border-b hover:bg-slate-50 transition">
-
-                                    <td class="py-4 px-4">
-                                        {{ $item->id_petugas ?? '-' }}
-                                    </td>
-
-                                    <td class="py-4 px-4 font-medium">
-                                        {{ $item->nama_ric ?? '-' }}
-                                    </td>
-
-                                    <td class="py-4 px-4 font-semibold text-slate-800">
-                                        {{ $item->nopol ?? '-' }}
-                                    </td>
-
-                                    <td class="py-4 px-4">
-                                        {{ $item->nama_wp ?? '-' }}
-                                    </td>
-
-                                    <td class="py-4 px-4 max-w-[250px] whitespace-normal">
-                                        {{ $item->alamat ?? '-' }}
-                                    </td>
-
-                                    <td class="py-4 px-4">
-                                        {{ $item->masa_berlaku ?? '-' }}
-                                    </td>
-
-                                    <td class="py-4 px-4">
-                                        {{ $item->gol ?? '-' }}
-                                    </td>
-
-                                    <td class="py-4 px-4">
-                                        {{ $item->no_hp ?? '-' }}
-                                    </td>
-
-                                    <td class="py-4 px-4">
-                                        {{ $item->status_penyerahan ?? '-' }}
-                                    </td>
-
-                                    <td class="py-4 px-4">
-                                        {{ $item->status_kepemilikan ?? '-' }}
-                                    </td>
-
-                                    <td class="py-4 px-4">
-
-                                        @php
-                                            $status = strtoupper($item->status_bayar ?? 'BELUM');
-                                        @endphp
-
-                                        @if($status == 'LUNAS')
-
-                                            <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">
-                                                LUNAS
-                                            </span>
-
-                                        @elseif($status == 'DP')
-
-                                            <span class="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-sm font-medium">
-                                                DP
-                                            </span>
-
-                                        @else
-
-                                            <span class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm font-medium">
-                                                BELUM
-                                            </span>
-
-                                        @endif
-
-                                    </td>
-
-                                    <td class="py-4 px-4 text-sm text-slate-500">
-                                        {{ $item->source_file ?? '-' }}
-                                    </td>
-
-                                </tr>
-
-                            @empty
-
-                                <tr>
-
-                                    <td colspan="12" class="text-center py-12 text-slate-400">
-                                        Belum ada data SWDKLLJ
-                                    </td>
-
-                                </tr>
-
-                            @endforelse
-
-                        </tbody>
-
-                    </table>
-
-                </div>
-
                 <!-- PAGINATION -->
-                <div class="mt-6">
+                <div class="mt-5">
                     {{ $data->links() }}
                 </div>
 
@@ -487,6 +644,7 @@
 
     </div>
 
+    <!-- APEXCHART -->
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 
     <script>
@@ -495,17 +653,17 @@
 
             chart: {
                 type: 'bar',
-                height: 350,
+                height: 260,
                 toolbar: {
                     show: false
-                }
+                },
+                fontFamily: 'Figtree'
             },
 
             series: [{
                 name: 'Jumlah',
                 data: [
                     {{ $sudahBayar }},
-                    {{ $dp }},
                     {{ $belumBayar }}
                 ]
             }],
@@ -513,8 +671,7 @@
             xaxis: {
                 categories: [
                     'LUNAS',
-                    'DP',
-                    'BELUM BAYAR'
+                    'BELUM'
                 ]
             },
 
@@ -522,12 +679,16 @@
                 enabled: false
             },
 
-            colors: ['#2563eb'],
+            legend: {
+                show: false
+            },
+
+            colors: ['#2563EB'],
 
             plotOptions: {
                 bar: {
-                    borderRadius: 8,
-                    columnWidth: '50%'
+                    borderRadius: 10,
+                    columnWidth: '45%'
                 }
             }
 

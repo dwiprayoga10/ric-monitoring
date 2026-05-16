@@ -25,8 +25,26 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/visualisasi', [DashboardController::class, 'visualisasi'])
         ->name('visualisasi');
 
-        Route::get('/laporan', [DashboardController::class, 'laporan'])
-    ->name('laporan');
+    /*
+    |--------------------------------------------------------------------------
+    | LAPORAN
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/laporan', [DashboardController::class, 'laporan'])
+        ->name('laporan');
+
+    // TAMBAHAN BARU
+    Route::get(
+        '/laporan-petugas/{nama_ric}',
+        [DashboardController::class, 'laporanPetugas']
+    )->name('laporan.petugas');
+
+    /*
+    |--------------------------------------------------------------------------
+    | IMPORT
+    |--------------------------------------------------------------------------
+    */
 
     Route::post('/import-excel', [DashboardController::class, 'import'])
         ->name('import.excel');
