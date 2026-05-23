@@ -1,155 +1,169 @@
 # Feature Test Assignment
 
-## 1. Instructions
+## 📌 Project Overview
 
-- Clone or fork this repository.
-- Create a new branch: `{user}-assignment`.
-- Invite **@ikhsan017** and **@dhiaaziz** as collaborators.
-- Follow the setup instructions provided in the repository before running the project.
+This project is a feature test assignment focused on building a structured CRUD management system with hierarchical data relationships:
 
-## 2. Feature Requirements
+Supplier → CLT Layups → CLT Layers
 
-### Core Features (Main Criteria)
+The system supports:
+- CRUD operations
+- Nested data management
+- Import & Export functionality
+- Conflict Resolution during import
+- Dashboard-style interface based on provided Figma reference
 
-- [ ] CRUD Suppliers
-- [ ] CRUD CLT Layups (nested under Supplier)
-- [ ] CRUD CLT Layers (nested under Layup)
+The application was developed using:
+- Laravel
+- MySQL
+- Tailwind CSS
+- Blade Template Engine
 
-The structure should properly reflect the hierarchy:
-Supplier → Layups → Layers
+---
 
-### Data Model (ERD)
+# 👨‍💻 Team Members
 
-Below is the Entity Relationship Diagram (ERD) representing the data structure:
+## 1. Rafie Tegar Virgananda Setia Putra
+### Role:
+- Backend Developer
+- Project Manager
 
-![ERD](./erd-new.png)
+### Responsibilities:
+- System architecture planning
+- Database design & migration
+- CRUD API & business logic
+- Import / Export implementation
+- Conflict resolution system
+- Service & Repository pattern
+- Testing & backend optimization
+- Project coordination
 
-### Import / Export (Main Criteria)
+---
 
-- [ ] **Export by Supplier**
-    - Must include: Supplier + all related Layups + all related Layers
+## 2. Yoga
+### Role:
+- Frontend Developer
+- Deployment Engineer
 
-- [ ] **Import by Supplier**
-    - Must create and/or update Layups and Layers under the specified supplier
+### Responsibilities:
+- UI implementation based on Figma
+- Frontend layout & responsiveness
+- Dashboard visualization
+- User experience improvements
+- Deployment & hosting configuration
 
-Format is flexible (JSON / CSV / Excel, etc.). JSON format is completely acceptable.
+---
 
-## 3. Feature: Conflict Resolution (Bonus – Important)
+# 🚀 Features
 
-During import, conflicts may occur when incoming data differs from existing records.
+## ✅ CRUD Suppliers
+- Create supplier
+- Update supplier
+- Delete supplier
+- View supplier detail
 
-### Conflict Detection Rules
+---
 
-#### 1. Layup-Level Conflict
+## ✅ CRUD CLT Layups
+Nested under Supplier
 
-If a layup with the same `name` already exists under the same supplier:
+Features:
+- Add layup
+- Edit layup
+- Delete layup
+- View layup detail
 
-- Treat it as the same layup candidate.
-- Do **not** automatically create a new layup.
+---
 
-#### 2. Layer-Level Conflict
+## ✅ CRUD CLT Layers
+Nested under Layup
 
+Features:
+- Add layer
+- Edit layer
+- Delete layer
+- Layer ordering support
+
+---
+
+# 📥 Import / Export
+
+## Export by Supplier
+Export includes:
+- Supplier
+- Layups
+- Layers
+
+Format:
+- JSON
+
+---
+
+## Import by Supplier
+
+Supports:
+- Create new records
+- Update existing records
+- Conflict detection
+
+---
+
+# ⚠️ Conflict Resolution
+
+## Layup Conflict
+If layup name already exists under same supplier:
+- treated as same layup candidate
+
+---
+
+## Layer Conflict
 If:
+- same `layer_order`
+- but different values (`thickness`, `width`, `angle`)
 
-- A layer with the same `layer_order` exists within that layup,
-- **AND** one or more fields differ (`thickness`, `width`, `angle`),
-
-→ This must be treated as a conflict.
-
----
-
-### Required Conflict Handling
-
-You must implement a clearly defined conflict resolution strategy.
-
-At minimum, support **one** of the following:
-
-- **Overwrite Existing**  
-  (Incoming data replaces current data)
-
-- **Skip Conflict**  
-  (Keep current data, ignore incoming change)
-
-- **Duplicate Layup**  
-  (Create a new layup with a suffix such as `name (imported)`)
-
-- **Reject Entire Import**  
-  (Abort and return a detailed conflict report)
+→ marked as conflict
 
 ---
 
-### Advanced Conflict Resolution (UI-Based – Bonus)
+## Conflict Strategy
+Implemented:
+- Overwrite Existing
 
-For additional bonus points, implement a **manual conflict resolution interface** similar to GitHub merge conflict resolution.
+---
 
-Expected behavior:
+## Bonus Feature
+Manual conflict resolution UI inspired by GitHub merge conflict workflow:
+- Existing vs Incoming comparison
+- Highlight differences
+- Manual selection
+- Step-by-step conflict navigation
 
-- Display **Existing Version (Current Data)** and  
-  **Incoming Version (Imported Data)** side-by-side
-- Highlight field-level differences
-- Allow the user to choose:
-    - ✅ Keep Existing
-    - ✅ Accept Incoming
-- Support resolving conflicts one-by-one
-- Provide navigation (e.g., “1 of 3 discrepancies”)
+---
 
-This may be implemented as:
+# 🎨 Design Reference
 
-- A modal, or
-- A dedicated conflict resolution page.
+Figma:
+https://www.figma.com/design/odWJ887r00aslmSFPIHMCx/SPEC-Toolbox---Feature-Test
 
-## 4. Design Reference
+---
 
-A design reference is available in Figma:
+# 🛠️ Tech Stack
 
-[Figma Design File](https://www.figma.com/design/odWJ887r00aslmSFPIHMCx/SPEC-Toolbox---Feature-Test?node-id=11001-35&t=XUggOaUUi9p8jGFG-1)
+## Backend
+- Laravel
+- PHP 8+
+- MySQL
 
-> The design is for reference only. Exact visual matching is not required.
+## Frontend
+- Blade
+- Tailwind CSS
+- JavaScript
 
-## 5. Evaluation Criteria
+---
 
-### Main Evaluation
+# 📂 Installation
 
-- Correct implementation of the required features
+## Clone Repository
 
-### Bonus Evaluation
-
-**Architecture & Design Patterns**
-
-- Use Repository and/or Service pattern
-- Bind interfaces via a Service Provider
-
-**Laravel Best Practices**
-
-- Form Request validation
-- Policies or Gates for authorization
-- Proper use of Route Model Binding
-- Clean, maintainable code following Laravel conventions
-
-**Automated Testing**
-
-- Unit tests (validation, services, repositories)
-- Feature tests (CRUD and import/export flows)
-
-**Additional Improvements**
-
-- Any meaningful enhancements will be considered positively
-
-## 6. Submission
-
-The deadline will be provided via email.  
-Please ensure submission within the specified timeframe.
-
-
-## 7. Demo
-
-Include one of the following with your submission:
-
-- A demo video (recommended), or
-- A live project link
-
-Ensure the demo clearly showcases:
-
-- CRUD functionality
-- Import / Export feature
-- Conflict resolution behavior
+```bash
+git clone <repository-url>
