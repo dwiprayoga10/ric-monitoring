@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>SIM SWDKLLJ - Jasa Raharja Cabang Semarang</title>
+    <title>RIC MONITORING - Jasa Raharja Cabang Semarang</title>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
@@ -103,7 +103,7 @@
 
                 <div>
                     <h1 class="font-bold text-lg lg:text-xl">
-                        SIM SWDKLLJ
+                        RIC MONITORING
                     </h1>
                     <p class="text-sm text-blue-100">
                         Jasa Raharja Cabang Semarang
@@ -126,13 +126,6 @@
                             Login
                         </a>
 
-                        @if (Route::has('register'))
-                            <a href="{{ route('register') }}"
-                               class="btn-primary px-5 py-2 rounded-xl font-semibold transition duration-300">
-                                Register
-                            </a>
-                        @endif
-
                     @endauth
                 </nav>
             @endif
@@ -149,55 +142,56 @@
             <div class="animate-fade-up">
 
                 <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-5">
-                    <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                    <span class="w-2 h-2 bg-cyan-300 rounded-full animate-pulse"></span>
                     <span class="text-sm">
-                        Sistem Monitoring Terintegrasi
+                        Sistem Pengelolaan Data Terintegrasi
                     </span>
                 </div>
 
                 <h2 class="hero-title text-4xl lg:text-6xl font-extrabold mb-5 max-w-3xl">
-                    Sistem Monitoring
+                    RIC
                     <span class="text-cyan-300">
-                        Pembayaran
+                        MONITORING
                     </span>
-                    & Surat Pemberitahuan Pajak
+                    SWDKLLJ
                 </h2>
 
                 <p class="text-blue-100 text-base lg:text-lg leading-relaxed max-w-2xl mb-7">
-                    Platform digital monitoring pembayaran SWDKLLJ dan
-                    pengelolaan surat pemberitahuan pajak kendaraan
-                    secara cepat, transparan, dan terintegrasi
-                    untuk wilayah Cabang Semarang.
+                    RIC MONITORING merupakan platform pengelolaan
+                    data SWDKLLJ dan surat pemberitahuan pajak
+                    kendaraan berbasis import data untuk mendukung
+                    proses monitoring, validasi, dan pengelolaan
+                    data secara terstruktur di Jasa Raharja
+                    Cabang Semarang.
                 </p>
-
 
                 <!-- Stats -->
                 <div class="grid grid-cols-3 gap-4 mt-8 max-w-xl">
 
                     <div class="glass rounded-2xl p-4 text-center">
                         <h3 class="font-bold text-2xl text-cyan-300">
-                            24/7
+                            Import
                         </h3>
                         <p class="text-xs text-blue-100">
-                            Monitoring
+                            Data Terstruktur
                         </p>
                     </div>
 
                     <div class="glass rounded-2xl p-4 text-center">
                         <h3 class="font-bold text-2xl text-cyan-300">
-                            Real-Time
+                            Akurat
                         </h3>
                         <p class="text-xs text-blue-100">
-                            Tracking
+                            Validasi Data
                         </p>
                     </div>
 
                     <div class="glass rounded-2xl p-4 text-center">
                         <h3 class="font-bold text-2xl text-cyan-300">
-                            Secure
+                            Aman
                         </h3>
                         <p class="text-xs text-blue-100">
-                            System
+                            Sistem Terintegrasi
                         </p>
                     </div>
 
@@ -220,12 +214,13 @@
 
                     <div class="text-center mb-7">
                         <h3 class="text-3xl font-bold mb-2">
-                            SIM SWDKLLJ
+                            RIC MONITORING
                         </h3>
 
                         <p class="text-blue-100 text-sm leading-relaxed">
-                            Sistem Monitoring Pembayaran &
-                            Surat Pemberitahuan Pajak Kendaraan
+                            Sistem pengelolaan data SWDKLLJ dan
+                            surat pemberitahuan pajak kendaraan
+                            berbasis import data.
                         </p>
                     </div>
 
@@ -237,13 +232,6 @@
                                class="w-full block text-center btn-primary py-4 rounded-2xl font-bold transition duration-300">
                                 Masuk ke Sistem
                             </a>
-
-                            @if(Route::has('register'))
-                                <a href="{{ route('register') }}"
-                                   class="w-full block text-center border border-white/20 py-4 rounded-2xl hover:bg-white/10 transition">
-                                    Registrasi Akun
-                                </a>
-                            @endif
 
                         @else
 
@@ -264,7 +252,7 @@
                                     Efisien
                                 </h4>
                                 <p class="text-xs text-blue-100">
-                                    Monitoring Cepat
+                                    Pengolahan Data
                                 </p>
                             </div>
 
@@ -273,7 +261,7 @@
                                     Aman
                                 </h4>
                                 <p class="text-xs text-blue-100">
-                                    Data Terenkripsi
+                                    Data Terintegrasi
                                 </p>
                             </div>
 

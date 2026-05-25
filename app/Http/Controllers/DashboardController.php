@@ -6,6 +6,8 @@ use App\Models\Swdkllj;
 use Illuminate\Http\Request;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
+use Illuminate\Support\Facades\DB;
+use App\Models\AppSetting;
 
 class DashboardController extends Controller
 {
@@ -83,15 +85,18 @@ class DashboardController extends Controller
 
         $totalData = Swdkllj::count();
 
-        $sudahBayar = Swdkllj::whereRaw(
-            'UPPER(TRIM(status_bayar)) = ?',
-            ['LUNAS']
-        )->count();
+        $sudah_bayar = Swdkllj::whereRaw(
+    'UPPER(TRIM(status_bayar)) = ?',
+    ['SUDAH BAYAR']
+)->count();
 
-        $dp = Swdkllj::whereRaw(
-            'UPPER(TRIM(status_bayar)) = ?',
-            ['DP']
-        )->count();
+/*
+|--------------------------------------------------------------------------
+| TIDAK DIPAKAI LAGI
+|--------------------------------------------------------------------------
+*/
+
+$dp = 0;
 
         $belumBayar = Swdkllj::where(function ($q) {
 
@@ -102,541 +107,519 @@ class DashboardController extends Controller
 
         })->count();
 
+        $lastUpdate =
+    AppSetting::where(
+        'key',
+        'last_update'
+    )->first();
+
+$lastUpdate =
+    $lastUpdate
+    ? json_decode(
+        $lastUpdate->value,
+        true
+    )
+    : null;
+
         return view('dashboard.index', compact(
             'data',
             'totalData',
-            'sudahBayar',
+            'sudah_bayar',
             'dp',
-            'belumBayar'
+            'belumBayar',
+            'lastUpdate'
         ));
     }
 
-    public function import(Request $request)
-{
-    set_time_limit(0);
-    ini_set('memory_limit', '1024M');
 
-    $request->validate([
-        'files.*' => 'required|mimes:csv,txt,xls,xlsx'
-    ]);
+// public function syncSpreadsheet()
+// {
+//     set_time_limit(0);
+//     ini_set('memory_limit', '1024M');
+
+//     $spreadsheetId =
+//         '1ueG5KDL_gguPCEg5BA89IcQc9Yot-hoqEyu-GFdhWiM';
 
-    $totalImported = 0;
-    $totalSkipped = 0;
-
-    /*
-    |--------------------------------------------------------------------------
-    | SHEET YANG DIPROSES
-    |--------------------------------------------------------------------------
-    */
-
-    $allowedSheets = [
-        'CEK DATA I fix',
-        'CEK DATA II fix',
-        'CEK DATA III FIX',
-    ];
-
-    /*
-    |--------------------------------------------------------------------------
-    | BUFFER UPSERT
-    |--------------------------------------------------------------------------
-    */
-
-    $buffer = [];
-
-    $flushBuffer = function () use (&$buffer) {
-
-    if (empty($buffer)) {
-        return;
-    }
-
-    foreach ($buffer as $item) {
-
-        Swdkllj::updateOrCreate(
-
-            /*
-            |--------------------------------------------------------------------------
-            | CARI BERDASARKAN NOPOL
-            |--------------------------------------------------------------------------
-            */
-
-            [
-                'nopol' => $item['nopol'],
-            ],
-
-            /*
-            |--------------------------------------------------------------------------
-            | DATA UPDATE
-            |--------------------------------------------------------------------------
-            */
-
-            [
-
-                'no' => $item['no'],
-
-                'id_petugas' => $item['id_petugas'],
-
-                'nama_ric' => $item['nama_ric'],
-
-                'nama_wp' => $item['nama_wp'],
-
-                'alamat' => $item['alamat'],
-
-                'masa_berlaku' => $item['masa_berlaku'],
-
-                'gol' => $item['gol'],
-
-                'no_hp' => $item['no_hp'],
-
-                'status_penyerahan' =>
-                    $item['status_penyerahan'],
-
-                'status_kepemilikan' =>
-                    $item['status_kepemilikan'],
-
-                'status_bayar' =>
-                    $item['status_bayar'],
-
-                'metode_pembayaran' =>
-                    $item['metode_pembayaran'],
-
-                'nominal_bayar' =>
-                    $item['nominal_bayar'],
-
-                'source_file' =>
-                    $item['source_file'],
-            ]
-        );
-    }
-
-    $buffer = [];
-};
-
-    /*
-    |--------------------------------------------------------------------------
-    | FUNCTION PROCESS ROW
-    |--------------------------------------------------------------------------
-    */
-
-    $processRows = function (
-        array $rows,
-        string $sourceFile
-    ) use (
-        &$buffer,
-        &$flushBuffer,
-        &$totalImported,
-        &$totalSkipped
-    ) {
-
-        $headerFound = false;
-
-        foreach ($rows as $row) {
-
-            /*
-            |--------------------------------------------------------------------------
-            | RAPIIKAN DATA
-            |--------------------------------------------------------------------------
-            */
-
-            $row = array_map(function ($value) {
-                return trim((string) ($value ?? ''));
-            }, $row);
-
-            /*
-            |--------------------------------------------------------------------------
-            | SKIP KOSONG
-            |--------------------------------------------------------------------------
-            */
-
-            if (count(array_filter($row)) === 0) {
-                $totalSkipped++;
-                continue;
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | DETECT HEADER
-            |--------------------------------------------------------------------------
-            */
-
-            if (!$headerFound) {
-
-                $isHeader =
-                    strtoupper($row[0] ?? '') === 'NO' &&
-                    strtoupper($row[1] ?? '') === 'ID PETUGAS' &&
-                    strtoupper($row[2] ?? '') === 'NAMA RIC' &&
-                    strtoupper($row[3] ?? '') === 'NOPOL' &&
-                    strtoupper($row[4] ?? '') === 'NAMA WP';
-
-                if ($isHeader) {
-                    $headerFound = true;
-                }
-
-                continue;
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | SKIP HEADER NYANGKUT
-            |--------------------------------------------------------------------------
-            */
-
-            if (
-                strtoupper($row[0] ?? '') === 'NO' ||
-                strtoupper($row[3] ?? '') === 'NOPOL'
-            ) {
-                $totalSkipped++;
-                continue;
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | VALIDASI WAJIB
-            |--------------------------------------------------------------------------
-            */
-
-            $idPetugas = trim($row[1] ?? '');
-            $nopol = strtoupper(
-    preg_replace(
-        '/[^A-Z0-9]/',
-        '',
-        trim($row[3] ?? '')
-    )
-);
-            $namaWp = trim($row[4] ?? '');
-
-            if (
-                empty($idPetugas) ||
-                empty($nopol) ||
-                empty($namaWp)
-            ) {
-                $totalSkipped++;
-                continue;
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | STATUS BAYAR
-            |--------------------------------------------------------------------------
-            */
-
-            $statusBayar = strtoupper(
-                trim($row[11] ?? '')
-            );
-
-            if (
-                $statusBayar === 'LUNAS' ||
-                $statusBayar === 'SUDAH BAYAR'
-            ) {
-
-                $statusBayar = 'LUNAS';
-
-            } elseif ($statusBayar === 'DP') {
-
-                $statusBayar = 'DP';
-
-            } else {
-
-                $statusBayar = 'BELUM BAYAR';
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | FORMAT MASA BERLAKU
-            |--------------------------------------------------------------------------
-            */
-
-            $masaBerlaku = null;
-
-            try {
-
-                $rawTanggal = $row[6] ?? '';
-
-                if (is_numeric($rawTanggal)) {
-
-                    $masaBerlaku =
-                        ExcelDate::excelToDateTimeObject(
-                            $rawTanggal
-                        )->format('Y-m-d');
-
-                } else {
-
-                    $rawTanggal = trim($rawTanggal);
-
-                    if (!empty($rawTanggal)) {
-
-                        $bulan = [
-                            'Januari' => 'January',
-                            'Februari' => 'February',
-                            'Maret' => 'March',
-                            'April' => 'April',
-                            'Mei' => 'May',
-                            'Juni' => 'June',
-                            'Juli' => 'July',
-                            'Agustus' => 'August',
-                            'September' => 'September',
-                            'Oktober' => 'October',
-                            'November' => 'November',
-                            'Desember' => 'December',
-                        ];
-
-                        $rawTanggal = str_replace(
-                            array_keys($bulan),
-                            array_values($bulan),
-                            $rawTanggal
-                        );
-
-                        $masaBerlaku =
-                            \Carbon\Carbon::createFromFormat(
-                                'd F Y',
-                                $rawTanggal
-                            )->format('Y-m-d');
-                    }
-                }
-
-            } catch (\Throwable $e) {
-
-                $masaBerlaku = null;
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | NOMINAL
-            |--------------------------------------------------------------------------
-            */
-
-            $nominalBayar = null;
-
-            if (!empty($row[12])) {
-
-                $cleanNominal = preg_replace(
-                    '/[^0-9]/',
-                    '',
-                    $row[12]
-                );
-
-                $nominalBayar =
-                    is_numeric($cleanNominal)
-                    ? (float) $cleanNominal
-                    : null;
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | METODE PEMBAYARAN
-            |--------------------------------------------------------------------------
-            */
-
-            $metodePembayaran = strtolower(
-                trim($row[13] ?? '')
-            );
-
-            $metodePembayaran = str_replace(
-                ' ',
-                '',
-                $metodePembayaran
-            );
-
-            if ($metodePembayaran === 'online') {
-
-                $metodePembayaran = 'online';
-
-            } else {
-
-                $metodePembayaran = 'konvensional';
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | BUFFER DATA
-            |--------------------------------------------------------------------------
-            */
-
-            $buffer[] = [
-
-                'nopol' => $nopol,
-
-                'no' => is_numeric($row[0] ?? null)
-                    ? (int) $row[0]
-                    : null,
-
-                'id_petugas' => $idPetugas,
-
-                'nama_ric' => $row[2] ?? null,
-
-                'nama_wp' => $namaWp,
-
-                'alamat' => $row[5] ?? null,
-
-                'masa_berlaku' => $masaBerlaku,
-
-                'gol' => $row[7] ?? null,
-
-                'no_hp' => $row[8] ?? null,
-
-                'status_penyerahan' => $row[9] ?? null,
-
-                'status_kepemilikan' => $row[10] ?? null,
-
-                'status_bayar' => $statusBayar,
-
-                'metode_pembayaran' => $metodePembayaran,
-
-                'nominal_bayar' => $nominalBayar,
-
-                'source_file' => $sourceFile,
-
-                'updated_at' => now(),
-
-                
-            ];
-
-            $totalImported++;
-
-            /*
-            |--------------------------------------------------------------------------
-            | AUTO FLUSH
-            |--------------------------------------------------------------------------
-            */
-
-            if (count($buffer) >= 500) {
-                $flushBuffer();
-            }
-        }
-    };
-
-    /*
-    |--------------------------------------------------------------------------
-    | LOOP FILE
-    |--------------------------------------------------------------------------
-    */
-
-    foreach ($request->file('files') as $file) {
-
-        $path = $file->getRealPath();
-
-        $extension = strtolower(
-            $file->getClientOriginalExtension()
-        );
-
-        $sourceFile = $file->getClientOriginalName();
-
-        /*
-        |--------------------------------------------------------------------------
-        | EXCEL
-        |--------------------------------------------------------------------------
-        */
-
-        if (in_array($extension, ['xls', 'xlsx'])) {
-
-            $spreadsheet = IOFactory::load($path);
-
-            foreach (
-                $spreadsheet->getWorksheetIterator()
-                as $sheet
-            ) {
-
-                $sheetName = trim(
-                    $sheet->getTitle()
-                );
-
-                /*
-                |--------------------------------------------------------------------------
-                | SKIP SHEET TIDAK DIPAKAI
-                |--------------------------------------------------------------------------
-                */
-
-                if (
-                    !in_array(
-                        $sheetName,
-                        $allowedSheets
-                    )
-                ) {
-                    continue;
-                }
-
-                $rows = $sheet->toArray(
-                    null,
-                    true,
-                    true,
-                    false
-                );
-
-                $processRows(
-                    $rows,
-                    $sourceFile
-                );
-            }
-
-        } else {
-
-            /*
-            |--------------------------------------------------------------------------
-            | CSV / TXT
-            |--------------------------------------------------------------------------
-            */
-
-            $content = file($path);
-
-            if (
-                !$content ||
-                count($content) === 0
-            ) {
-                continue;
-            }
-
-            $delimiter = ",";
-
-            $firstLine = $content[0];
-
-            if (
-                substr_count($firstLine, ";")
-                >
-                substr_count($firstLine, ",")
-            ) {
-                $delimiter = ";";
-            }
-
-            $handle = fopen($path, 'r');
-
-            if (!$handle) {
-                continue;
-            }
-
-            $rows = [];
-
-            while (
-                ($row = fgetcsv(
-                    $handle,
-                    10000,
-                    $delimiter
-                )) !== false
-            ) {
-
-                $rows[] = $row;
-            }
-
-            fclose($handle);
-
-            $processRows(
-                $rows,
-                $sourceFile
-            );
-        }
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | FLUSH SISA BUFFER
-    |--------------------------------------------------------------------------
-    */
-
-    $flushBuffer();
-
-    return back()->with(
-        'success',
-        "Import berhasil! Imported: {$totalImported}, Skipped: {$totalSkipped}"
-    );
-}
+//     /*
+//     |--------------------------------------------------------------------------
+//     | SHEET YANG DIPROSES
+//     |--------------------------------------------------------------------------
+//     */
+
+//     $allowedSheets = [
+
+//         [
+//             'name' => 'CEK DATA I fix',
+//             'gid' => '753601129'
+//         ],
+
+//         [
+//             'name' => 'CEK DATA II fix',
+//             'gid' => '59744365'
+//         ],
+
+//         [
+//             'name' => 'CEK DATA III FIX',
+//             'gid' => '1861244810'
+//         ]
+//     ];
+
+//     /*
+//     |--------------------------------------------------------------------------
+//     | PREPARE
+//     |--------------------------------------------------------------------------
+//     */
+
+//     $buffer = [];
+//     $uniqueData = [];
+//     $sheetTotals = [];
+
+//     /*
+//     |--------------------------------------------------------------------------
+//     | LOOP SEMUA SHEET
+//     |--------------------------------------------------------------------------
+//     */
+
+//     foreach ($allowedSheets as $sheet) {
+
+//         $beforeCount = count($buffer);
+
+//         $url =
+//             "https://docs.google.com/spreadsheets/d/{$spreadsheetId}/export?format=csv&gid="
+//             . $sheet['gid'];
+
+//         $csv = @file_get_contents($url);
+
+//         if (!$csv) {
+
+//             $sheetTotals[
+//                 $sheet['name']
+//             ] = 'FAILED';
+
+//             continue;
+//         }
+
+//         $rows = array_map(
+//             'str_getcsv',
+//             explode("\n", $csv)
+//         );
+
+//         $headerFound = false;
+
+//         foreach ($rows as $row) {
+
+//             /*
+//             |--------------------------------------------------------------------------
+//             | RAPIIKAN DATA
+//             |--------------------------------------------------------------------------
+//             */
+
+//             $row = array_map(function ($value) {
+//                 return trim((string) ($value ?? ''));
+//             }, $row);
+
+//             /*
+//             |--------------------------------------------------------------------------
+//             | SKIP BARIS KOSONG
+//             |--------------------------------------------------------------------------
+//             */
+
+//             if (
+//                 count(array_filter($row))
+//                 === 0
+//             ) {
+//                 continue;
+//             }
+
+//             /*
+//             |--------------------------------------------------------------------------
+//             | DETECT HEADER
+//             |--------------------------------------------------------------------------
+//             */
+
+//             if (!$headerFound) {
+
+//                 $isHeader =
+//                     strtoupper($row[0] ?? '') === 'NO'
+//                     &&
+//                     strtoupper($row[1] ?? '') === 'ID PETUGAS'
+//                     &&
+//                     strtoupper($row[2] ?? '') === 'NAMA RIC'
+//                     &&
+//                     strtoupper($row[3] ?? '') === 'NOPOL'
+//                     &&
+//                     strtoupper($row[4] ?? '') === 'NAMA WP';
+
+//                 if ($isHeader) {
+//                     $headerFound = true;
+//                 }
+
+//                 continue;
+//             }
+
+//             /*
+//             |--------------------------------------------------------------------------
+//             | SKIP HEADER NYANGKUT
+//             |--------------------------------------------------------------------------
+//             */
+
+//             if (
+//                 strtoupper($row[0] ?? '') === 'NO'
+//                 ||
+//                 strtoupper($row[3] ?? '') === 'NOPOL'
+//             ) {
+//                 continue;
+//             }
+
+//             /*
+//             |--------------------------------------------------------------------------
+//             | VALIDASI WAJIB
+//             |--------------------------------------------------------------------------
+//             */
+
+//             $idPetugas =
+//                 trim($row[1] ?? '');
+
+//             $nopol = strtoupper(
+//                 preg_replace(
+//                     '/[^A-Z0-9]/',
+//                     '',
+//                     trim($row[3] ?? '')
+//                 )
+//             );
+
+//             $namaWp =
+//                 trim($row[4] ?? '');
+
+//             if (
+//                 empty($idPetugas)
+//                 ||
+//                 empty($nopol)
+//                 ||
+//                 empty($namaWp)
+//             ) {
+//                 continue;
+//             }
+
+//             /*
+//             |--------------------------------------------------------------------------
+//             | REMOVE DUPLICATE
+//             | ONLY NOPOL
+//             |--------------------------------------------------------------------------
+//             */
+
+//             /*
+// |--------------------------------------------------------------------------
+// | REMOVE DUPLICATE
+// | ONLY NOPOL
+// |--------------------------------------------------------------------------
+// */
+
+// /*
+// |--------------------------------------------------------------------------
+// | REMOVE DUPLICATE
+// |--------------------------------------------------------------------------
+// */
+
+// $key =
+//     strtoupper($nopol)
+//     . '_'
+//     . strtoupper($idPetugas);
+
+// if (isset($uniqueData[$key])) {
+
+//     continue;
+// }
+
+// $uniqueData[$key] = true;
+
+//             /*
+//             |--------------------------------------------------------------------------
+//             | FORMAT MASA BERLAKU
+//             |--------------------------------------------------------------------------
+//             */
+
+//             $masaBerlaku = null;
+
+//             try {
+
+//                 $rawTanggal =
+//                     trim($row[6] ?? '');
+
+//                 if (!empty($rawTanggal)) {
+
+//                     $bulan = [
+//                         'Januari' => 'January',
+//                         'Februari' => 'February',
+//                         'Maret' => 'March',
+//                         'April' => 'April',
+//                         'Mei' => 'May',
+//                         'Juni' => 'June',
+//                         'Juli' => 'July',
+//                         'Agustus' => 'August',
+//                         'September' => 'September',
+//                         'Oktober' => 'October',
+//                         'November' => 'November',
+//                         'Desember' => 'December',
+//                     ];
+
+//                     $rawTanggal =
+//                         str_replace(
+//                             array_keys($bulan),
+//                             array_values($bulan),
+//                             $rawTanggal
+//                         );
+
+//                     $masaBerlaku =
+//                         \Carbon\Carbon::createFromFormat(
+//                             'd F Y',
+//                             $rawTanggal
+//                         )->format('Y-m-d');
+//                 }
+
+//             } catch (\Throwable $e) {
+
+//                 $masaBerlaku = null;
+//             }
+
+//             /*
+// |--------------------------------------------------------------------------
+// | STATUS BAYAR
+// |--------------------------------------------------------------------------
+// */
+
+// $statusBayar = strtoupper(
+//     trim($row[11] ?? '')
+// );
+
+// /*
+// |--------------------------------------------------------------------------
+// | NORMALISASI STATUS
+// | Spreadsheet:
+// | - SUDAH BAYAR
+// | - BELUM BAYAR
+// |--------------------------------------------------------------------------
+// */
+
+// if (
+//     $statusBayar === 'SUDAH BAYAR'
+//     ||
+//     $statusBayar === 'LUNAS'
+// ) {
+
+//     $statusBayar =
+//         'SUDAH BAYAR';
+
+// } else {
+
+//     $statusBayar =
+//         'BELUM BAYAR';
+// }
+
+//             /*
+//             |--------------------------------------------------------------------------
+//             | NOMINAL BAYAR
+//             |--------------------------------------------------------------------------
+//             */
+
+//             $nominalBayar = null;
+
+//             if (!empty($row[12])) {
+
+//                 $cleanNominal =
+//                     preg_replace(
+//                         '/[^0-9]/',
+//                         '',
+//                         $row[12]
+//                     );
+
+//                 $nominalBayar =
+//                     is_numeric(
+//                         $cleanNominal
+//                     )
+//                     ? (float)
+//                         $cleanNominal
+//                     : null;
+//             }
+
+//             /*
+//             |--------------------------------------------------------------------------
+//             | METODE PEMBAYARAN
+//             |--------------------------------------------------------------------------
+//             */
+
+//             $metodePembayaran =
+//                 strtolower(
+//                     trim(
+//                         $row[13] ?? ''
+//                     )
+//                 );
+
+//             $metodePembayaran =
+//                 str_replace(
+//                     ' ',
+//                     '',
+//                     $metodePembayaran
+//                 );
+
+//             if (
+//                 $metodePembayaran
+//                 === 'online'
+//             ) {
+
+//                 $metodePembayaran =
+//                     'online';
+
+//             } else {
+
+//                 $metodePembayaran =
+//                     'konvensional';
+//             }
+
+//             /*
+//             |--------------------------------------------------------------------------
+//             | BUFFER INSERT
+//             |--------------------------------------------------------------------------
+//             */
+
+//             $buffer[] = [
+
+//                 'no' =>
+//                     is_numeric(
+//                         $row[0] ?? null
+//                     )
+//                     ? (int) $row[0]
+//                     : null,
+
+//                 'id_petugas' =>
+//                     $idPetugas,
+
+//                 'nama_ric' =>
+//                     $row[2] ?? null,
+
+//                 'nopol' =>
+//                     $nopol,
+
+//                 'nama_wp' =>
+//                     $namaWp,
+
+//                 'alamat' =>
+//                     $row[5] ?? null,
+
+//                 'masa_berlaku' =>
+//                     $masaBerlaku,
+
+//                 'gol' =>
+//                     $row[7] ?? null,
+
+//                 'no_hp' =>
+//                     $row[8] ?? null,
+
+//                 'status_penyerahan' =>
+//                     $row[9] ?? null,
+
+//                 'status_kepemilikan' =>
+//                     $row[10] ?? null,
+
+//                 'status_bayar' =>
+//                     $statusBayar,
+
+//                 'nominal_bayar' =>
+//                     $nominalBayar,
+
+//                 'metode_pembayaran' =>
+//                     $metodePembayaran,
+
+//                 'source_file' =>
+//                     $sheet['name'],
+
+//                 'created_at' =>
+//                     now(),
+
+//                 'updated_at' =>
+//                     now(),
+//             ];
+//         }
+
+//         /*
+//         |--------------------------------------------------------------------------
+//         | TOTAL PER SHEET
+//         |--------------------------------------------------------------------------
+//         */
+
+//         $afterCount = count($buffer);
+
+//         $sheetTotals[
+//             $sheet['name']
+//         ] =
+//             $afterCount
+//             -
+//             $beforeCount;
+//     }
+
+//     /*
+//     |--------------------------------------------------------------------------
+//     | INSERT DATABASE
+//     |--------------------------------------------------------------------------
+//     */
+
+//     /*
+// |--------------------------------------------------------------------------
+// | INSERT DATABASE
+// |--------------------------------------------------------------------------
+// */
+
+// if (!empty($buffer)) {
+
+//     try {
+
+//         Swdkllj::query()->delete();
+
+//         Swdkllj::insert($buffer);
+
+//     } catch (\Throwable $e) {
+
+//         return response()->json([
+//             'success' => false,
+//             'message' => $e->getMessage()
+//         ], 500);
+//     }
+// }
+
+//     /*
+//     |--------------------------------------------------------------------------
+//     | RESPONSE
+//     |--------------------------------------------------------------------------
+//     */
+
+//     /*
+// |--------------------------------------------------------------------------
+// | LAST UPDATE
+// |--------------------------------------------------------------------------
+// */
+
+// AppSetting::updateOrCreate(
+//     [
+//         'key' =>
+//             'last_update'
+//     ],
+//     [
+//         'value' =>
+//             json_encode([
+//                 'time' => now(),
+//                 'source' =>
+//                     'Spreadsheet Sync'
+//             ])
+//     ]
+// );
+
+//     return response()->json([
+//         'success' => true,
+//         'message' => 'Sync berhasil',
+//         'total' => count($buffer),
+//         'per_sheet' => $sheetTotals,
+//     ]);
+// }
 
     public function data(Request $request)
 {
@@ -689,24 +672,25 @@ class DashboardController extends Controller
 
     /*
     |--------------------------------------------------------------------------
-    | FILTER ZONA
+    | FILTER METODE PEMBAYARAN
     |--------------------------------------------------------------------------
     */
 
-    $zona = strtoupper(trim($request->zona ?? ''));
+    $metodeDipilih = strtolower(
+        trim($request->metode ?? '')
+    );
 
-    if (!empty($zona) && isset($zonaMapping[$zona])) {
+    if ($metodeDipilih === 'online') {
 
-        $query->where(function ($q) use ($zonaMapping, $zona) {
+        $query->whereRaw(
+            "LOWER(TRIM(metode_pembayaran)) = 'online'"
+        );
 
-            foreach ($zonaMapping[$zona] as $wilayah) {
+    } elseif ($metodeDipilih === 'konvensional') {
 
-                $q->orWhereRaw(
-                    "UPPER(alamat) LIKE ?",
-                    ['%' . strtoupper($wilayah) . '%']
-                );
-            }
-        });
+        $query->whereRaw(
+            "LOWER(TRIM(metode_pembayaran)) = 'konvensional'"
+        );
     }
 
     /*
@@ -740,13 +724,17 @@ class DashboardController extends Controller
         trim($request->status ?? '')
     );
 
-    if ($statusDipilih === 'LUNAS') {
+    if ($statusDipilih === 'SUDAH BAYAR'){
 
         $query->whereRaw(
-            "UPPER(TRIM(status_bayar)) = 'LUNAS'"
+            "UPPER(TRIM(status_bayar)) = 'SUDAH BAYAR'"
         );
 
-    } elseif ($statusDipilih === 'BELUM') {
+    } elseif (
+    $statusDipilih === 'BELUM'
+    ||
+    $statusDipilih === 'BELUM BAYAR'
+) {
 
         $query->where(function ($q) {
 
@@ -796,7 +784,7 @@ class DashboardController extends Controller
     |--------------------------------------------------------------------------
     */
 
-    if ($statusDipilih === 'LUNAS') {
+    if ($statusDipilih === 'SUDAH BAYAR'){
 
         /*
         |--------------------------------------------------------------------------
@@ -804,21 +792,28 @@ class DashboardController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $online = (clone $query)
-            ->whereRaw("
-                LOWER(TRIM(metode_pembayaran))
-                = 'online'
-            ")
-            ->count();
+        $onlineData = (clone $query)
 
-        $konvensional = (clone $query)
-            ->whereRaw("
-                LOWER(TRIM(metode_pembayaran))
-                = 'konvensional'
-            ")
-            ->count();
+    ->whereRaw("
+        LOWER(TRIM(metode_pembayaran))
+        = 'online'
+    ")
 
-        /*
+    ->get();
+
+    $online = $onlineData->count();
+
+       $konvensionalData = (clone $query)
+
+    ->whereRaw("
+        LOWER(TRIM(metode_pembayaran))
+        = 'konvensional'
+    ")
+
+    ->get();
+
+    $konvensional = $konvensionalData->count();
+        /*Q
         |--------------------------------------------------------------------------
         | NOMINAL
         |--------------------------------------------------------------------------
@@ -838,22 +833,27 @@ class DashboardController extends Controller
             ")
             ->sum('nominal_bayar');
 
-        $totalNominal =
-            $nominalOnline +
-            $nominalKonvensional;
+        /*
+        |--------------------------------------------------------------------------
+        | PERSENTASE BERDASARKAN JUMLAH METODE
+        |--------------------------------------------------------------------------
+        */
+
+        $totalMetode =
+            $online + $konvensional;
 
         $persenOnline =
-            $totalNominal > 0
+            $totalMetode > 0
             ? round(
-                ($nominalOnline / $totalNominal) * 100,
+                ($online / $totalMetode) * 100,
                 1
             )
             : 0;
 
         $persenKonvensional =
-            $totalNominal > 0
+            $totalMetode > 0
             ? round(
-                ($nominalKonvensional / $totalNominal) * 100,
+                ($konvensional / $totalMetode) * 100,
                 1
             )
             : 0;
@@ -901,12 +901,6 @@ class DashboardController extends Controller
 
                         $match = false;
 
-                        /*
-                        |--------------------------------------------------------------------------
-                        | FORMAT KEL.
-                        |--------------------------------------------------------------------------
-                        */
-
                         if (preg_match(
                             '/KEL\.?\s+' .
                             preg_quote($wilayah, '/') .
@@ -915,12 +909,6 @@ class DashboardController extends Controller
                         )) {
                             $match = true;
                         }
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | FORMAT RT/RW
-                        |--------------------------------------------------------------------------
-                        */
 
                         if (!$match) {
 
@@ -934,12 +922,6 @@ class DashboardController extends Controller
                                 $match = true;
                             }
                         }
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | FALLBACK
-                        |--------------------------------------------------------------------------
-                        */
 
                         if (!$match) {
 
@@ -959,45 +941,33 @@ class DashboardController extends Controller
                 $kmpResults[$namaZona][] = [
 
                     'nama' => $wilayah,
-
                     'total' => $detailOnline->count(),
-
                     'list' => $detailOnline
-
                 ];
             }
         }
 
         /*
         |--------------------------------------------------------------------------
-        | TOP 3 KMP
+        | TOP 3 GLOBAL KMP
         |--------------------------------------------------------------------------
         */
 
-        foreach ($kmpResults as $zonaKey => $items) {
+        $topKmp = collect($kmpResults)
 
-           /*
-|--------------------------------------------------------------------------
-| TOP 3 GLOBAL KMP
-|--------------------------------------------------------------------------
-*/
+            ->flatten(1)
 
-$topKmp = collect($kmpResults)
+            ->filter(function ($item) {
+                return $item['total'] > 0;
+            })
 
-    ->flatten(1)
+            ->sortByDesc('total')
 
-    ->filter(function ($item) {
-        return $item['total'] > 0;
-    })
+            ->take(3)
 
-    ->sortByDesc('total')
+            ->values()
 
-    ->take(3)
-
-    ->values()
-
-    ->toArray();
-        }
+            ->toArray();
     }
 
     return view('data.index', compact(
@@ -1011,49 +981,82 @@ $topKmp = collect($kmpResults)
         'persenKonvensional',
         'kmpResults',
         'topKmp',
-        'zona'
+        'metodeDipilih'
     ));
 }
     public function visualisasi()
 {
     /*
-|--------------------------------------------------------------------------
-| VISUAL STATUS KEPEMILIKAN
-|--------------------------------------------------------------------------
-*/
-
-$kepemilikanChart = Swdkllj::selectRaw("
-        TRIM(status_kepemilikan) as status,
-        COUNT(*) as total
-    ")
-    ->whereNotNull('status_kepemilikan')
-    ->whereRaw("TRIM(status_kepemilikan) != ''")
-    ->groupBy('status')
-    ->orderByDesc('total')
-    ->get();
-
-
-    /*
     |--------------------------------------------------------------------------
-    | GOLONGAN SUDAH BAYAR
+    | STATUS KEPEMILIKAN
     |--------------------------------------------------------------------------
     */
 
-    $dpCount = Swdkllj::whereRaw("
-            UPPER(TRIM(status_bayar)) = 'LUNAS'
+    $kepemilikanChart = Swdkllj::selectRaw("
+            TRIM(status_kepemilikan) as status,
+            COUNT(*) as total
         ")
-        ->whereRaw("
-            UPPER(TRIM(gol)) LIKE '%DP%'
-        ")
+        ->whereNotNull('status_kepemilikan')
+        ->whereRaw("TRIM(status_kepemilikan) != ''")
+        ->groupBy('status')
+        ->orderByDesc('total')
+        ->get();
+
+    /*
+    |--------------------------------------------------------------------------
+    | GLOBAL STATUS PEMBAYARAN
+    |--------------------------------------------------------------------------
+    */
+
+    $sudahBayarItems = Swdkllj::whereRaw("
+        UPPER(TRIM(status_bayar))
+        = 'SUDAH BAYAR'
+    ")->get();
+
+    $belumBayarItems = Swdkllj::where(function ($q) {
+
+        $q->whereNull('status_bayar')
+            ->orWhereRaw("TRIM(status_bayar) = ''")
+            ->orWhereRaw("UPPER(TRIM(status_bayar)) = 'BELUM'")
+            ->orWhereRaw("UPPER(TRIM(status_bayar)) = 'BELUM BAYAR'");
+
+    })->get();
+
+    /*
+    |--------------------------------------------------------------------------
+    | SUDAH BAYAR
+    |--------------------------------------------------------------------------
+    */
+
+    $dpCount = $sudahBayarItems
+    
+    
+
+        ->filter(function ($item) {
+
+            return str_starts_with(
+    strtoupper(trim($item->gol ?? '')),
+    'DP'
+);
+        })
+
         ->count();
 
-    $ciCount = Swdkllj::whereRaw("
-            UPPER(TRIM(status_bayar)) = 'LUNAS'
-        ")
-        ->whereRaw("
-            UPPER(TRIM(gol)) LIKE '%C%'
-        ")
-        ->count();
+        $ciCount = $sudahBayarItems
+
+    ->filter(function ($item) {
+
+        $gol = strtoupper(
+            trim($item->gol ?? '')
+        );
+
+        return str_starts_with(
+            $gol,
+            'C1'
+        );
+    })
+
+    ->count();
 
     /*
     |--------------------------------------------------------------------------
@@ -1061,106 +1064,33 @@ $kepemilikanChart = Swdkllj::selectRaw("
     |--------------------------------------------------------------------------
     */
 
-    $belumDP = Swdkllj::where(function ($q) {
+    $belumDP = $belumBayarItems
 
-            $q->whereNull('status_bayar')
-              ->orWhereRaw("TRIM(status_bayar) = ''")
-              ->orWhereRaw("UPPER(TRIM(status_bayar)) = 'BELUM'")
-              ->orWhereRaw("UPPER(TRIM(status_bayar)) = 'BELUM BAYAR'");
+    ->filter(function ($item) {
 
-        })
-        ->whereRaw("
-            UPPER(TRIM(gol)) LIKE '%DP%'
-        ")
-        ->count();
+        return str_starts_with(
+            strtoupper(trim($item->gol ?? '')),
+            'DP'
+        );
+    })
 
-    $belumCI = Swdkllj::where(function ($q) {
+    ->count();
 
-            $q->whereNull('status_bayar')
-              ->orWhereRaw("TRIM(status_bayar) = ''")
-              ->orWhereRaw("UPPER(TRIM(status_bayar)) = 'BELUM'")
-              ->orWhereRaw("UPPER(TRIM(status_bayar)) = 'BELUM BAYAR'");
+    $belumCI = $belumBayarItems
 
-        })
-        ->whereRaw("
-            UPPER(TRIM(gol)) LIKE '%C%'
-        ")
-        ->count();
+    ->filter(function ($item) {
 
-    /*
-    |--------------------------------------------------------------------------
-    | NOMINAL LUNAS
-    |--------------------------------------------------------------------------
-    */
+        $gol = strtoupper(
+            trim($item->gol ?? '')
+        );
 
-    $totalDPLunas = $dpCount * 140000;
-    $totalCILunas = $ciCount * 32000;
+        return str_starts_with(
+            $gol,
+            'C1'
+        );
+    })
 
-    $totalNominalLunas =
-        $totalDPLunas +
-        $totalCILunas;
-
-    /*
-    |--------------------------------------------------------------------------
-    | NOMINAL BELUM BAYAR
-    |--------------------------------------------------------------------------
-    */
-
-    $totalDPBelum = $belumDP * 140000;
-    $totalCIBelum = $belumCI * 32000;
-
-    $totalNominalBelum =
-        $totalDPBelum +
-        $totalCIBelum;
-
-    /*
-|--------------------------------------------------------------------------
-| PERSENTASE PEMBAYARAN
-|--------------------------------------------------------------------------
-*/
-
-$totalKeseluruhanNominal =
-    $totalNominalLunas +
-    $totalNominalBelum;
-
-$persenLunas =
-    $totalKeseluruhanNominal > 0
-    ? round(
-        ($totalNominalLunas / $totalKeseluruhanNominal) * 100,
-        1
-    )
-    : 0;
-
-$persenBelum =
-    $totalKeseluruhanNominal > 0
-    ? round(
-        ($totalNominalBelum / $totalKeseluruhanNominal) * 100,
-        1
-    )
-    : 0;
-
-    /*
-    |--------------------------------------------------------------------------
-    | TOTAL PENDAPATAN
-    | LUNAS - BELUM
-    |--------------------------------------------------------------------------
-    */
-
-    $grandTotal =
-        $totalNominalLunas
-        -
-        $totalNominalBelum;
-
-    /*
-    |--------------------------------------------------------------------------
-    | TOTAL JIKA SEMUA BAYAR
-    |--------------------------------------------------------------------------
-    */
-
-    $totalSemuaBayar =
-        (($dpCount + $belumDP) * 140000)
-        +
-        (($ciCount + $belumCI) * 32000);
+    ->count();
 
     /*
     |--------------------------------------------------------------------------
@@ -1168,52 +1098,191 @@ $persenBelum =
     |--------------------------------------------------------------------------
     */
 
-    $totalLunas =
-        $dpCount + $ciCount;
+    $totalsudah_bayar =
+        $sudahBayarItems->count();
 
     $totalBelum =
-        $belumDP + $belumCI;
+        $belumBayarItems->count();
+        
 
+    /*
+|--------------------------------------------------------------------------
+| NOMINAL SUDAH BAYAR
+|--------------------------------------------------------------------------
+*/
+
+$totalNominalsudah_bayar =
+    $sudahBayarItems->sum('nominal_bayar');
+
+/*
+|--------------------------------------------------------------------------
+| NOMINAL BELUM BAYAR
+|--------------------------------------------------------------------------
+*/
+
+$totalDPBelum =
+    $belumDP * 140000;
+
+$totalCIBelum =
+    $belumCI * 32000;
+
+$totalNominalBelum =
+    $totalDPBelum + $totalCIBelum;
+/*
+|--------------------------------------------------------------------------
+| TOTAL PER GOLONGAN
+|--------------------------------------------------------------------------
+*/
+
+$totalDPsudah_bayar = $sudahBayarItems
+
+    ->filter(function ($item) {
+
+        return str_starts_with(
+            strtoupper(trim($item->gol ?? '')),
+            'DP'
+        );
+    })
+
+    ->sum('nominal_bayar');
+
+$totalCIsudah_bayar = $sudahBayarItems
+
+    ->filter(function ($item) {
+
+        return str_starts_with(
+            strtoupper(trim($item->gol ?? '')),
+            'C1'
+        );
+    })
+
+    ->sum('nominal_bayar');
+
+$totalDPBelum = $belumBayarItems
+
+    ->filter(function ($item) {
+
+        return str_starts_with(
+            strtoupper(trim($item->gol ?? '')),
+            'DP'
+        );
+    })
+
+    ->sum('nominal_bayar');
+
+$totalCIBelum = $belumBayarItems
+
+    ->filter(function ($item) {
+
+        return str_starts_with(
+            strtoupper(trim($item->gol ?? '')),
+            'C1'
+        );
+    })
+
+    ->sum('nominal_bayar');
+
+    /*
+    |--------------------------------------------------------------------------
+    | PERSENTASE PEMBAYARAN
+    |--------------------------------------------------------------------------
+    */
+
+    $totalKeseluruhanNominal =
+        $totalNominalsudah_bayar +
+        $totalNominalBelum;
+
+    $persensudah_bayar =
+        $totalKeseluruhanNominal > 0
+        ? round(
+            (
+                $totalNominalsudah_bayar
+                /
+                $totalKeseluruhanNominal
+            ) * 100,
+            1
+        )
+        : 0;
+
+    $persenBelum =
+        $totalKeseluruhanNominal > 0
+        ? round(
+            (
+                $totalNominalBelum
+                /
+                $totalKeseluruhanNominal
+            ) * 100,
+            1
+        )
+        : 0;
+
+    /*
+    |--------------------------------------------------------------------------
+    | GAP TARGET PENDAPATAN
+    |--------------------------------------------------------------------------
+    */
+
+    $grandTotal =
+        $totalNominalsudah_bayar
+        -
+        $totalNominalBelum;
+
+    /*
+|--------------------------------------------------------------------------
+| TOTAL JIKA SEMUA BAYAR
+|--------------------------------------------------------------------------
+*/
+
+$totalSemuaBayar =
+    $totalNominalsudah_bayar
+    +
+    $totalNominalBelum;
     /*
     |--------------------------------------------------------------------------
     | TOP PETUGAS
     |--------------------------------------------------------------------------
     */
 
-    /*
-|--------------------------------------------------------------------------
-| PROGRESS PETUGAS BERDASARKAN STATUS PENYERAHAN
-|--------------------------------------------------------------------------
-*/
+    $petugas = Swdkllj::selectRaw("
+        nama_ric,
 
-$petugas = Swdkllj::selectRaw("
-    nama_ric,
+        COUNT(*) as total,
 
-    COUNT(*) as total,
+        SUM(
+            CASE
+                WHEN status_penyerahan IS NOT NULL
+                AND TRIM(status_penyerahan) != ''
+                THEN 1
+                ELSE 0
+            END
+        ) as selesai
+    ")
 
-    SUM(
-        CASE
-            WHEN status_penyerahan IS NOT NULL
-                 AND TRIM(status_penyerahan) != ''
-            THEN 1
-            ELSE 0
-        END
-    ) as selesai
-")
-->whereNotNull('nama_ric')
-->groupBy('nama_ric')
-->orderByDesc('selesai')
-->limit(15)
-->get()
-->map(function ($item) {
+    ->whereNotNull('nama_ric')
 
-    $item->progress =
-        $item->total > 0
-        ? round(($item->selesai / $item->total) * 100)
-        : 0;
+    ->groupBy('nama_ric')
 
-    return $item;
-});
+    ->orderByDesc('selesai')
+
+    ->limit(15)
+
+    ->get()
+
+    ->map(function ($item) {
+
+        $item->progress =
+            $item->total > 0
+            ? round(
+                (
+                    $item->selesai
+                    /
+                    $item->total
+                ) * 100
+            )
+            : 0;
+
+        return $item;
+    });
 
     /*
     |--------------------------------------------------------------------------
@@ -1229,27 +1298,86 @@ $petugas = Swdkllj::selectRaw("
         ->limit(10)
         ->get();
 
+    /*
+|--------------------------------------------------------------------------
+| AKUMULASI KERJA RIC
+|--------------------------------------------------------------------------
+*/
+
+$totalKerjaRic =
+    Swdkllj::whereNotNull(
+        'status_kepemilikan'
+    )
+    ->whereRaw("
+        TRIM(status_kepemilikan)
+        != ''
+    ")
+    ->count();
+
+$totalTargetRic =
+    Swdkllj::count();
+
+$persenKerjaRic =
+    $totalTargetRic > 0
+    ? round(
+        (
+            $totalKerjaRic
+            /
+            $totalTargetRic
+        ) * 100,
+        1
+    )
+    : 0;
+
+    /*
+|--------------------------------------------------------------------------
+| INSIGHT RIC
+|--------------------------------------------------------------------------
+*/
+
+$totalPetugasAktif =
+    Swdkllj::whereNotNull(
+        'status_kepemilikan'
+    )
+    ->distinct()
+    ->count('nama_ric');
+
+$statusDominan =
+    collect(
+        $kepemilikanChart
+    )->sortByDesc('total')
+    ->first();
+
+$sisaPengerjaan =
+    $totalTargetRic
+    -
+    $totalKerjaRic;
+
     return view('visualisasi.index', compact(
+        'totalPetugasAktif',
+'statusDominan',
+'sisaPengerjaan',
+        'totalKerjaRic',
+'totalTargetRic',
+'persenKerjaRic',
         'dpCount',
         'ciCount',
         'belumDP',
         'belumCI',
-        'totalLunas',
+        'totalsudah_bayar',
         'totalBelum',
-        'totalDPLunas',
-        'totalCILunas',
+        'totalDPsudah_bayar',
+        'totalCIsudah_bayar',
         'totalDPBelum',
         'totalCIBelum',
-        'totalNominalLunas',
+        'totalNominalsudah_bayar',
         'totalNominalBelum',
         'grandTotal',
         'totalSemuaBayar',
         'petugas',
         'kepemilikanChart',
-        'persenLunas',
+        'persensudah_bayar',
         'persenBelum',
-        'totalNominalLunas',
-        'totalNominalBelum',
         'sourceFiles'
     ));
 }
@@ -1398,11 +1526,11 @@ public function laporan(Request $request)
                 CASE
                     WHEN UPPER(
                         TRIM(status_bayar)
-                    ) = 'LUNAS'
+                    ) = 'SUDAH BAYAR'
                     THEN 1
                     ELSE 0
                 END
-            ) as lunas
+            ) as sudah_bayar
         ")
 
         ->selectRaw("
@@ -1431,11 +1559,33 @@ public function laporan(Request $request)
         */
 
         ->selectRaw("
-            COALESCE(
-                SUM(nominal_bayar),
-                0
-            ) as total_nominal
-        ")
+    COALESCE(
+
+        SUM(
+
+            CASE
+
+                WHEN
+                    UPPER(
+                        TRIM(status_bayar)
+                    ) = 'SUDAH BAYAR'
+
+                THEN
+                    COALESCE(
+                        nominal_bayar,
+                        0
+                    )
+
+                ELSE 0
+
+            END
+
+        ),
+
+        0
+
+    ) as total_nominal
+")
 
         /*
         |--------------------------------------------------------------------------
@@ -1450,7 +1600,7 @@ public function laporan(Request $request)
                     WHEN
                         UPPER(
                             TRIM(status_bayar)
-                        ) = 'LUNAS'
+                        ) = 'SUDAH BAYAR'
 
                     AND
 
@@ -1472,7 +1622,7 @@ public function laporan(Request $request)
                     WHEN
                         UPPER(
                             TRIM(status_bayar)
-                        ) = 'LUNAS'
+                        ) = 'SUDAH BAYAR'
 
                     AND
 
@@ -1568,11 +1718,11 @@ public function laporan(Request $request)
             |--------------------------------------------------------------------------
             */
 
-            $item->persen_lunas =
+            $item->persen_sudah_bayar =
                 $item->total_target > 0
                 ? round(
                     (
-                        $item->lunas
+                        $item->sudah_bayar
                         /
                         $item->total_target
                     ) * 100,
@@ -1613,9 +1763,9 @@ public function laporan(Request $request)
         $laporanPetugas
             ->sum('total_target');
 
-    $totalLunas =
+    $totalsudah_bayar =
         $laporanPetugas
-            ->sum('lunas');
+            ->sum('sudah_bayar');
 
     $totalBelum =
         $laporanPetugas
@@ -1633,7 +1783,7 @@ public function laporan(Request $request)
 
             'totalPetugas',
             'totalTarget',
-            'totalLunas',
+            'totalsudah_bayar',
             'totalBelum',
             'grandNominal'
         )
@@ -1682,20 +1832,23 @@ public function laporanPetugas($namaRic)
     */
 
     $statusPenyerahan = $items
-        ->groupBy(function ($item) {
+    ->groupBy(function ($item) {
 
-            return strtoupper(
-                trim(
-                    $item->status_penyerahan
-                    ?? 'TIDAK ADA STATUS'
-                )
-            );
-        })
-        ->map(function ($group) {
+        $status = strtoupper(
+            trim(
+                $item->status_penyerahan ?? ''
+            )
+        );
 
-            return $group->count();
-        })
-        ->sortDesc();
+        return empty($status)
+            ? 'BELUM MELAKUKAN PENYERAHAN'
+            : $status;
+    })
+    ->map(function ($group) {
+
+        return $group->count();
+    })
+    ->sortDesc();
 
     $totalPenyerahan =
         $statusPenyerahan->sum();
@@ -1707,20 +1860,23 @@ public function laporanPetugas($namaRic)
     */
 
     $statusKepemilikan = $items
-        ->groupBy(function ($item) {
+    ->groupBy(function ($item) {
 
-            return strtoupper(
-                trim(
-                    $item->status_kepemilikan
-                    ?? 'TIDAK ADA STATUS'
-                )
-            );
-        })
-        ->map(function ($group) {
+        $status = strtoupper(
+            trim(
+                $item->status_kepemilikan ?? ''
+            )
+        );
 
-            return $group->count();
-        })
-        ->sortDesc();
+        return empty($status)
+            ? 'BELUM DIKETAHUI STATUS KEPEMILIKAN'
+            : $status;
+    })
+    ->map(function ($group) {
+
+        return $group->count();
+    })
+    ->sortDesc();
 
     /*
     |--------------------------------------------------------------------------
@@ -1729,28 +1885,23 @@ public function laporanPetugas($namaRic)
     */
 
     $statusBayar = $items
-        ->groupBy(function ($item) {
+    ->groupBy(function ($item) {
 
-            $status = strtoupper(
-                trim(
-                    $item->status_bayar
-                    ?? ''
-                )
-            );
+        $status = strtoupper(
+            trim(
+                $item->status_bayar ?? ''
+            )
+        );
 
-            if (
-                empty($status)
-            ) {
-                return 'BELUM BAYAR';
-            }
+        return empty($status)
+            ? 'BELUM MELAKUKAN PEMBAYARAN'
+            : $status;
+    })
+    ->map(function ($group) {
 
-            return $status;
-        })
-        ->map(function ($group) {
-
-            return $group->count();
-        })
-        ->sortDesc();
+        return $group->count();
+    })
+    ->sortDesc();
 
     /*
     |--------------------------------------------------------------------------
@@ -1758,10 +1909,19 @@ public function laporanPetugas($namaRic)
     |--------------------------------------------------------------------------
     */
 
-    $totalNominalBayar =
-        $items->sum(
-            'nominal_bayar'
-        );
+    $totalNominalBayar = $items
+
+    ->filter(function ($item) {
+
+        return strtoupper(
+            trim(
+                $item->status_bayar
+                ?? ''
+            )
+        ) === 'SUDAH BAYAR';
+    })
+
+    ->sum('nominal_bayar');
 
     /*
     |--------------------------------------------------------------------------
@@ -1806,5 +1966,660 @@ public function laporanPetugas($namaRic)
         )
     );
 }
+
+public function importExcel(Request $request)
+{
+    set_time_limit(0);
+    ini_set('memory_limit', '1024M');
+
+    /*
+    |--------------------------------------------------------------------------
+    | VALIDASI FILE
+    |--------------------------------------------------------------------------
+    */
+
+    $request->validate([
+    'files' => 'required|array',
+    'files.*' =>
+        'mimes:xlsx,xls,csv,txt|max:51200'
+]);
+
+/*
+    |--------------------------------------------------------------------------
+    | PREPARE
+    |--------------------------------------------------------------------------
+    */
+
+    $buffer = [];
+    $uniqueData = [];
+    $sheetTotals = [];
+
+    /*
+    |--------------------------------------------------------------------------
+    | LOAD FILE
+    |--------------------------------------------------------------------------
+    */
+
+    $files =
+    $request->file('files');
+
+    foreach ($files as $file) {
+    $extension =
+
+    
+    strtolower(
+        $file->getClientOriginalExtension()
+    );
+
+    /*
+|--------------------------------------------------------------------------
+| LOAD FILE
+|--------------------------------------------------------------------------
+*/
+
+if (
+    in_array(
+        $extension,
+        ['csv', 'txt']
+    )
+) {
+
+    $spreadsheet =
+        IOFactory::createReader('Csv')
+        ->load(
+            $file->getPathname()
+        );
+
+} else {
+
+    $spreadsheet =
+        IOFactory::load(
+            $file->getPathname()
+        );
+}
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | SHEET YANG DIPROSES
+    |--------------------------------------------------------------------------
+    */
+
+    $allowedSheets = [
+        'CEK DATA I fix',
+        'CEK DATA II fix',
+        'CEK DATA III FIX'
+    ];
+
+    
+    /*
+    |--------------------------------------------------------------------------
+    | LOOP SHEET
+    |--------------------------------------------------------------------------
+    */
+
+    /*
+|--------------------------------------------------------------------------
+| LOOP SHEET / CSV
+|--------------------------------------------------------------------------
+*/
+
+$worksheets =
+    in_array(
+        $extension,
+        ['csv', 'txt']
+    )
+    ? [$spreadsheet->getActiveSheet()]
+    : $spreadsheet->getWorksheetIterator();
+
+foreach ($worksheets as $sheet) {
+
+        $sheetName =
+            trim($sheet->getTitle());
+
+        /*
+        |--------------------------------------------------------------------------
+        | HANYA SHEET TERTENTU
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+    !in_array(
+    $extension,
+    ['csv', 'txt']
+)
+    &&
+    !in_array(
+        $sheetName,
+        $allowedSheets
+    )
+) {
+    continue;
+}
+
+        $beforeCount =
+            count($buffer);
+
+        $rows =
+            $sheet
+                ->toArray(
+                    null,
+                    true,
+                    true,
+                    false
+                );
+
+        $headerFound = false;
+
+        foreach ($rows as $row) {
+
+            /*
+            |--------------------------------------------------------------------------
+            | RAPIIKAN DATA
+            |--------------------------------------------------------------------------
+            */
+
+            $row = array_map(
+                function ($value) {
+
+                    return trim(
+                        (string)
+                        ($value ?? '')
+                    );
+                },
+                $row
+            );
+
+            /*
+            |--------------------------------------------------------------------------
+            | SKIP BARIS KOSONG
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                count(
+                    array_filter($row)
+                ) === 0
+            ) {
+                continue;
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | DETECT HEADER
+            |--------------------------------------------------------------------------
+            */
+
+            if (!$headerFound) {
+
+                $isHeader =
+                    strtoupper(
+                        $row[0] ?? ''
+                    ) === 'NO'
+
+                    &&
+
+                    strtoupper(
+                        $row[1] ?? ''
+                    ) === 'ID PETUGAS'
+
+                    &&
+
+                    strtoupper(
+                        $row[2] ?? ''
+                    ) === 'NAMA RIC'
+
+                    &&
+
+                    strtoupper(
+                        $row[3] ?? ''
+                    ) === 'NOPOL'
+
+                    &&
+
+                    strtoupper(
+                        $row[4] ?? ''
+                    ) === 'NAMA WP';
+
+                if ($isHeader) {
+
+                    $headerFound = true;
+                }
+
+                continue;
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | SKIP HEADER NYANGKUT
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                strtoupper(
+                    $row[0] ?? ''
+                ) === 'NO'
+
+                ||
+
+                strtoupper(
+                    $row[3] ?? ''
+                ) === 'NOPOL'
+            ) {
+                continue;
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | VALIDASI WAJIB
+            |--------------------------------------------------------------------------
+            */
+
+            $idPetugas =
+                trim(
+                    $row[1] ?? ''
+                );
+
+            $nopol =
+                strtoupper(
+                    preg_replace(
+                        '/[^A-Z0-9]/',
+                        '',
+                        trim(
+                            $row[3] ?? ''
+                        )
+                    )
+                );
+
+            $namaWp =
+                trim(
+                    $row[4] ?? ''
+                );
+
+            if (
+                empty($idPetugas)
+                ||
+                empty($nopol)
+                ||
+                empty($namaWp)
+            ) {
+                continue;
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | REMOVE DUPLICATE
+            | NOPOL + ID PETUGAS
+            |--------------------------------------------------------------------------
+            */
+
+            $key =
+                strtoupper($nopol)
+                . '_'
+                . strtoupper($idPetugas);
+
+            if (
+                isset(
+                    $uniqueData[$key]
+                )
+            ) {
+                continue;
+            }
+
+            $uniqueData[$key] =
+                true;
+
+            /*
+            |--------------------------------------------------------------------------
+            | FORMAT MASA BERLAKU
+            |--------------------------------------------------------------------------
+            */
+
+            $masaBerlaku = null;
+
+            try {
+
+                $rawTanggal =
+                    $row[6] ?? '';
+
+                if (
+                    !empty(
+                        $rawTanggal
+                    )
+                ) {
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | EXCEL DATE NUMBER
+                    |--------------------------------------------------------------------------
+                    */
+
+                    if (
+                        is_numeric(
+                            $rawTanggal
+                        )
+                    ) {
+
+                        $masaBerlaku =
+                            ExcelDate::excelToDateTimeObject(
+                                $rawTanggal
+                            )
+                            ->format(
+                                'Y-m-d'
+                            );
+
+                    } else {
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | FORMAT TEXT INDONESIA
+                        |--------------------------------------------------------------------------
+                        */
+
+                        $bulan = [
+                            'Januari' => 'January',
+                            'Februari' => 'February',
+                            'Maret' => 'March',
+                            'April' => 'April',
+                            'Mei' => 'May',
+                            'Juni' => 'June',
+                            'Juli' => 'July',
+                            'Agustus' => 'August',
+                            'September' => 'September',
+                            'Oktober' => 'October',
+                            'November' => 'November',
+                            'Desember' => 'December',
+                        ];
+
+                        $rawTanggal =
+                            str_replace(
+                                array_keys(
+                                    $bulan
+                                ),
+                                array_values(
+                                    $bulan
+                                ),
+                                trim(
+                                    $rawTanggal
+                                )
+                            );
+
+                        $masaBerlaku =
+                            \Carbon\Carbon::createFromFormat(
+                                'd F Y',
+                                $rawTanggal
+                            )
+                            ->format(
+                                'Y-m-d'
+                            );
+                    }
+                }
+
+            } catch (\Throwable $e) {
+
+                $masaBerlaku =
+                    null;
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | STATUS BAYAR
+            |--------------------------------------------------------------------------
+            */
+
+            $statusBayar =
+                strtoupper(
+                    trim(
+                        $row[11] ?? ''
+                    )
+                );
+
+            if (
+                $statusBayar
+                === 'SUDAH BAYAR'
+                ||
+                $statusBayar
+                === 'LUNAS'
+            ) {
+
+                $statusBayar =
+                    'SUDAH BAYAR';
+
+            } else {
+
+                $statusBayar =
+                    'BELUM BAYAR';
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | NOMINAL BAYAR
+            |--------------------------------------------------------------------------
+            */
+
+            $nominalBayar =
+                null;
+
+            if (
+                !empty(
+                    $row[12]
+                )
+            ) {
+
+                $cleanNominal =
+                    preg_replace(
+                        '/[^0-9]/',
+                        '',
+                        $row[12]
+                    );
+
+                $nominalBayar =
+                    is_numeric(
+                        $cleanNominal
+                    )
+                    ? (float)
+                        $cleanNominal
+                    : null;
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | METODE PEMBAYARAN
+            |--------------------------------------------------------------------------
+            */
+
+            $metodePembayaran =
+                strtolower(
+                    trim(
+                        $row[13] ?? ''
+                    )
+                );
+
+            $metodePembayaran =
+                str_replace(
+                    ' ',
+                    '',
+                    $metodePembayaran
+                );
+
+            if (
+                $metodePembayaran
+                === 'online'
+            ) {
+
+                $metodePembayaran =
+                    'online';
+
+            } else {
+
+                $metodePembayaran =
+                    'konvensional';
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | BUFFER INSERT
+            |--------------------------------------------------------------------------
+            */
+
+            $buffer[] = [
+
+                'no' =>
+                    is_numeric(
+                        $row[0] ?? null
+                    )
+                    ? (int)
+                        $row[0]
+                    : null,
+
+                'id_petugas' =>
+                    $idPetugas,
+
+                'nama_ric' =>
+                    $row[2] ?? null,
+
+                'nopol' =>
+                    $nopol,
+
+                'nama_wp' =>
+                    $namaWp,
+
+                'alamat' =>
+                    $row[5] ?? null,
+
+                'masa_berlaku' =>
+                    $masaBerlaku,
+
+                'gol' =>
+                    $row[7] ?? null,
+
+                'no_hp' =>
+                    $row[8] ?? null,
+
+                'status_penyerahan' =>
+                    $row[9] ?? null,
+
+                'status_kepemilikan' =>
+                    $row[10] ?? null,
+
+                'status_bayar' =>
+                    $statusBayar,
+
+                'nominal_bayar' =>
+                    $nominalBayar,
+
+                'metode_pembayaran' =>
+                    $metodePembayaran,
+
+                'source_file' =>
+                    $sheetName,
+
+                'created_at' =>
+                    now(),
+
+                'updated_at' =>
+                    now(),
+            ];
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | TOTAL PER SHEET
+        |--------------------------------------------------------------------------
+        */
+
+        $afterCount =
+            count($buffer);
+
+        $sheetTotals[
+            $sheetName
+        ] =
+            $afterCount
+            -
+            $beforeCount;
+    }
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | INSERT DATABASE
+    |--------------------------------------------------------------------------
+    */
+
+    if (!empty($buffer)) {
+
+        try {
+
+            Swdkllj::upsert(
+
+    $buffer,
+
+    [
+        'nopol',
+        'id_petugas'
+    ],
+
+    [
+        'no',
+        'nama_ric',
+        'nama_wp',
+        'alamat',
+        'masa_berlaku',
+        'gol',
+        'no_hp',
+        'status_penyerahan',
+        'status_kepemilikan',
+        'status_bayar',
+        'nominal_bayar',
+        'metode_pembayaran', // <- TAMBAH INI
+        'source_file',
+        'updated_at'
+    ]
+);
+
+        } catch (\Throwable $e) {
+
+            return response()->json([
+                'success' => false,
+                'message' =>
+                    $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | RESPONSE
+    |--------------------------------------------------------------------------
+    */
+
+    AppSetting::updateOrCreate(
+    [
+        'key' =>
+            'last_update'
+    ],
+    [
+        'value' =>
+            json_encode([
+                'time' => now(),
+                'source' =>
+                    'Import File'
+            ])
+    ]
+);
+
+    return response()->json([
+        'success' => true,
+        'message' =>
+            'Import File berhasil',
+        'total' =>
+            count($buffer),
+        'per_sheet' =>
+            $sheetTotals,
+    ]);
+}
+
+
 
 }

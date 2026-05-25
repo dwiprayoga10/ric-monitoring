@@ -1,4 +1,4 @@
-
+{{-- data/index blade --}}
 <x-app-layout>
 
     <x-slot name="header">
@@ -82,18 +82,18 @@
                             </option>
 
                             <option
-                                value="LUNAS"
-                                {{ request('status') == 'LUNAS' ? 'selected' : '' }}
-                            >
-                                LUNAS
-                            </option>
+    value="SUDAH BAYAR"
+    {{ request('status') == 'SUDAH BAYAR' ? 'selected' : '' }}
+>
+    SUDAH BAYAR
+</option>
 
-                            <option
-                                value="BELUM"
-                                {{ request('status') == 'BELUM' ? 'selected' : '' }}
-                            >
-                                BELUM
-                            </option>
+<option
+    value="BELUM BAYAR"
+    {{ request('status') == 'BELUM BAYAR' ? 'selected' : '' }}
+>
+    BELUM BAYAR
+</option>
 
                         </select>
 
@@ -132,7 +132,7 @@
 
             </div>
 
-            @if($statusDipilih === 'LUNAS')
+            @if($statusDipilih === 'SUDAH BAYAR')
 
 <div class="card-ui rounded-[28px] p-5">
 
@@ -143,7 +143,7 @@
         </h3>
 
         <p class="text-sm text-slate-500">
-            Pembayaran lunas berdasarkan metode
+            Pembayaran sudah dilakukan melalui metode
         </p>
 
     </div>
@@ -184,7 +184,7 @@
 
             </div>
 
-            <div class="bg-purple-50 rounded-2xl p-5">
+            <div class="bg-green-50 rounded-2xl p-5">
 
                 <div class="flex justify-between items-center">
 
@@ -194,7 +194,7 @@
                             KONVENSIONAL
                         </p>
 
-                        <h3 class="font-bold text-2xl text-purple-700">
+                        <h3 class="font-bold text-2xl text-green-700">
     Rp {{ number_format($nominalKonvensional, 0, ',', '.') }}
 </h3>
 
@@ -204,7 +204,7 @@
 
                     </div>
 
-                    <span class="text-xl font-bold text-purple-700">
+                    <span class="text-xl font-bold text-green-700">
                         {{ $persenKonvensional }}%
                     </span>
 
@@ -220,7 +220,7 @@
 
 @endif
 
-@if($statusDipilih === 'LUNAS')
+@if($statusDipilih === 'SUDAH BAYAR')
 
 <div class="card-ui rounded-[28px] p-5">
 
@@ -450,40 +450,49 @@
     </div>
 
     <!-- FILTER ZONA -->
-    <form method="GET" action="{{ route('data.swdkllj') }}">
+    <!-- FILTER METODE PEMBAYARAN -->
+<form method="GET" action="{{ route('data.swdkllj') }}">
 
-        <!-- supaya search & status tidak hilang -->
-        <input type="hidden" name="search" value="{{ request('search') }}">
-        <input type="hidden" name="status" value="{{ request('status') }}">
+    <!-- supaya search & status tidak hilang -->
+    <input
+        type="hidden"
+        name="search"
+        value="{{ request('search') }}"
+    >
 
-        <select
-            name="zona"
-            onchange="this.form.submit()"
-            class="bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[220px]"
+    <input
+        type="hidden"
+        name="status"
+        value="{{ request('status') }}"
+    >
+
+    <select
+        name="metode"
+        onchange="this.form.submit()"
+        class="bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[220px]"
+    >
+
+        <option value="">
+            Semua Metode
+        </option>
+
+        <option
+            value="online"
+            {{ request('metode') == 'online' ? 'selected' : '' }}
         >
+            Online
+        </option>
 
-            <option value="">
-                Semua Zona
-            </option>
+        <option
+            value="konvensional"
+            {{ request('metode') == 'konvensional' ? 'selected' : '' }}
+        >
+            Konvensional
+        </option>
 
-            <option value="SAMSAT I"
-                {{ request('zona') == 'SAMSAT I' ? 'selected' : '' }}>
-                Samsat I
-            </option>
+    </select>
 
-            <option value="SAMSAT II"
-                {{ request('zona') == 'SAMSAT II' ? 'selected' : '' }}>
-                Samsat II
-            </option>
-
-            <option value="SAMSAT III"
-                {{ request('zona') == 'SAMSAT III' ? 'selected' : '' }}>
-                Samsat III
-            </option>
-
-        </select>
-
-    </form>
+</form>
 
 </div>
 
@@ -610,31 +619,24 @@
                                         <td class="py-4 px-4">
 
                                             @php
-                                                $status = strtoupper($item->status_bayar ?? 'BELUM');
+                                                $status = strtoupper($item->status_bayar ?? 'BELUM BAYAR');
                                             @endphp
 
-                                            @if($status == 'LUNAS')
+                                            @if($status == 'SUDAH BAYAR')
 
-                                                <span class="inline-flex items-center gap-2 bg-green-100 text-green-700 px-3 py-2 rounded-full text-xs font-semibold">
-                                                    <span class="w-2 h-2 rounded-full bg-green-500"></span>
-                                                    LUNAS
-                                                </span>
+    <span class="inline-flex items-center gap-2 bg-green-100 text-green-700 px-3 py-2 rounded-full text-xs font-semibold">
+        <span class="w-2 h-2 rounded-full bg-green-500"></span>
+        SUDAH BAYAR
+    </span>
 
-                                            @elseif($status == 'DP')
+@else
 
-                                                <span class="inline-flex items-center gap-2 bg-amber-100 text-amber-700 px-3 py-2 rounded-full text-xs font-semibold">
-                                                    <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-                                                    DP
-                                                </span>
+    <span class="inline-flex items-center gap-2 bg-red-100 text-red-700 px-3 py-2 rounded-full text-xs font-semibold">
+        <span class="w-2 h-2 rounded-full bg-red-500"></span>
+         BELUM BAYAR
+    </span>
 
-                                            @else
-
-                                                <span class="inline-flex items-center gap-2 bg-red-100 text-red-700 px-3 py-2 rounded-full text-xs font-semibold">
-                                                    <span class="w-2 h-2 rounded-full bg-red-500"></span>
-                                                    BELUM
-                                                </span>
-
-                                            @endif
+@endif
 
                                         </td>
 
@@ -644,7 +646,7 @@
                                                 $metode = strtolower($item->metode_pembayaran ?? '');
                                             @endphp
 
-                                            @if($status !== 'LUNAS')
+                                            @if($status !== 'SUDAH BAYAR')
 
                                                 <span class="text-slate-400 text-sm">
                                                     -
@@ -716,7 +718,7 @@
     </div>
 
     
-@if($statusDipilih === 'LUNAS')
+@if($statusDipilih === 'SUDAH BAYAR')
 
 <script>
 
@@ -798,4 +800,5 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 
 @endif
+
 </x-app-layout>

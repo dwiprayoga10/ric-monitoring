@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>SIM SWDKLLJ - Jasa Raharja Cabang Semarang</title>
+    <title>RIC MONITORING - Jasa Raharja Cabang Semarang</title>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
@@ -37,9 +37,17 @@
         }
 
         @keyframes floating {
-            0% { transform: translateY(0px);}
-            50% { transform: translateY(-8px);}
-            100% { transform: translateY(0px);}
+            0% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-8px);
+            }
+
+            100% {
+                transform: translateY(0px);
+            }
         }
 
         .animate-fade {
@@ -51,6 +59,7 @@
                 opacity: 0;
                 transform: translateY(20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -87,9 +96,9 @@
             box-shadow: 0 10px 25px rgba(0,0,0,.20);
         }
 
-        @media(max-width:1024px){
-            body{
-                overflow-y:auto;
+        @media(max-width:1024px) {
+            body {
+                overflow-y: auto;
             }
         }
     </style>
@@ -117,7 +126,7 @@
 
                 <div>
                     <h1 class="font-bold text-2xl">
-                        SIM SWDKLLJ
+                        RIC MONITORING
                     </h1>
 
                     <p class="text-blue-100">
@@ -127,17 +136,20 @@
             </div>
 
             <h2 class="text-5xl font-extrabold leading-tight max-w-2xl mb-5">
-                Sistem Monitoring
+                RIC
                 <span class="text-cyan-300">
-                    Pembayaran
+                    MONITORING
                 </span>
                 SWDKLLJ
             </h2>
 
             <p class="text-blue-100 text-lg max-w-xl leading-relaxed">
-                Platform monitoring pembayaran dan pengelolaan surat
-                pemberitahuan pajak kendaraan yang cepat,
-                transparan, aman dan terintegrasi.
+                Platform pengelolaan data SWDKLLJ dan
+                surat pemberitahuan pajak kendaraan
+                berbasis import data yang terstruktur,
+                akurat, aman, dan terintegrasi untuk
+                mendukung proses monitoring data di
+                Jasa Raharja Cabang Semarang.
             </p>
 
             <!-- Stats -->
@@ -145,28 +157,28 @@
 
                 <div class="glass rounded-3xl p-4 text-center">
                     <h3 class="text-cyan-300 text-2xl font-bold">
-                        24/7
+                        Import
                     </h3>
                     <p class="text-sm text-blue-100">
-                        Monitoring
+                        Data Terstruktur
                     </p>
                 </div>
 
                 <div class="glass rounded-3xl p-4 text-center">
                     <h3 class="text-cyan-300 text-2xl font-bold">
-                        Real-Time
+                        Akurat
                     </h3>
                     <p class="text-sm text-blue-100">
-                        Tracking
+                        Validasi Data
                     </p>
                 </div>
 
                 <div class="glass rounded-3xl p-4 text-center">
                     <h3 class="text-cyan-300 text-2xl font-bold">
-                        Secure
+                        Aman
                     </h3>
                     <p class="text-sm text-blue-100">
-                        System
+                        Sistem Terintegrasi
                     </p>
                 </div>
 
@@ -178,7 +190,7 @@
         <div class="flex items-center justify-center px-6">
 
             <!-- CARD -->
-            <div class="glass rounded-[38px] w-full max-w-[430px] p-8 lg:p-10 animate-fade">
+            <div class="glass rounded-[34px] w-full max-w-[420px] p-6 animate-fade">
 
                 <!-- Header -->
                 <div class="text-center mb-7">
@@ -190,11 +202,12 @@
                     >
 
                     <h2 class="text-2xl font-bold mb-2">
-                        Selamat Datang
+                        RIC MONITORING
                     </h2>
 
-                    <p class="text-blue-100 text-sm">
-                        Login untuk mengakses sistem monitoring
+                    <p class="text-blue-100 text-sm leading-relaxed">
+                        Sistem pengelolaan data SWDKLLJ
+                        berbasis import data
                     </p>
 
                 </div>

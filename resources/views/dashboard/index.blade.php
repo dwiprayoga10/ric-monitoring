@@ -1,4 +1,5 @@
 {{-- dashboard index blade --}}
+
 <x-app-layout>
 
     <x-slot name="header">
@@ -36,6 +37,7 @@
             </div>
 
         </div>
+        
 
     </x-slot>
 
@@ -43,78 +45,134 @@
 
         <div class="page-container space-y-6">
 
-            <!-- IMPORT -->
-            <div class="card-ui rounded-[28px] p-6">
+            <!-- SYNC GOOGLE SHEET -->
+<div class="card-ui rounded-[28px] p-6">
 
-                <div class="flex items-center gap-3 mb-5">
+    <div class="flex items-center justify-between flex-col lg:flex-row gap-5">
 
-                    <div class="h-12 w-12 rounded-2xl bg-blue-100 flex items-center justify-center">
+        <div class="flex items-center gap-4">
 
-                        <i data-lucide="file-up" class="w-5 h-5 text-blue-600"></i>
+            <div class="h-14 w-14 rounded-2xl bg-blue-100 flex items-center justify-center">
 
-                    </div>
+    <i
+        data-lucide="database"
+        class="w-6 h-6 text-blue-600"
+    ></i>
 
-                    <div>
+</div>
 
-                        <h3 class="font-bold text-lg text-slate-800">
-                            Import Data
-                        </h3>
+            <div>
 
-                        <p class="text-sm text-slate-500">
-                            Upload file Excel / CSV SWDKLLJ
-                        </p>
+    <h3 class="font-bold text-lg text-slate-800">
+        Import Data
+    </h3>
 
-                    </div>
+    <p class="text-sm text-slate-500">
+        Upload file .xlsx, .xls, .csv
+    </p>
 
-                </div>
+    {{-- LAST UPDATE --}}
+    @if($lastUpdate)
 
-                @if(session('success'))
-                    <div class="mb-5 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-2xl text-sm">
-                        {{ session('success') }}
-                    </div>
-                @endif
+        <div class="mt-3">
 
-                @if ($errors->any())
-                    <div class="mb-5 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-2xl text-sm">
+            <p class="text-xs font-medium text-slate-500">
+                Update terakhir
+            </p>
 
-                        <ul class="space-y-1">
+            <div class="flex items-center gap-2 mt-1">
 
-                            @foreach ($errors->all() as $error)
-                                <li>• {{ $error }}</li>
-                            @endforeach
+                <span class="text-xs text-slate-600">
+                    {{
+    \Carbon\Carbon::parse(
+        $lastUpdate['time']
+    )
+    ->timezone(
+        'Asia/Jakarta'
+    )
+    ->translatedFormat(
+        'd F Y • H:i'
+    )
+}} WIB
+                    
+                
+                </span>
 
-                        </ul>
-
-                    </div>
-                @endif
-
-                <form
-                    action="{{ route('import.excel') }}"
-                    method="POST"
-                    enctype="multipart/form-data"
-                    class="grid lg:grid-cols-[1fr_auto] gap-4"
-                >
-
-                    @csrf
-
-                    <input
-                        type="file"
-                        name="files[]"
-                        multiple
-                        class="w-full border border-slate-300 rounded-2xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-
-                    <button
-                        type="submit"
-                        class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-2xl font-semibold transition flex items-center justify-center gap-2"
-                    >
-                        <i data-lucide="upload-cloud" class="w-4 h-4"></i>
-                        Import
-                    </button>
-
-                </form>
+                <span class="
+                    text-[11px]
+                    bg-blue-100
+                    text-blue-700
+                    px-2 py-1
+                    rounded-full
+                    font-medium
+                ">
+                    {{
+                        $lastUpdate['source']
+                    }}
+                </span>
 
             </div>
+
+        </div>
+
+    @endif
+
+</div>
+
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-3">
+
+    <!-- IMPORT EXCEL -->
+    <form
+        id="importExcelForm"
+        enctype="multipart/form-data"
+    >
+        @csrf
+
+        <label
+            for="excelFile"
+            class="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl font-semibold transition flex items-center gap-2"
+        >
+            <i
+                data-lucide="file-spreadsheet"
+                class="w-4 h-4"
+            ></i>
+
+            Upload File
+        </label>
+
+        <input
+    id="excelFile"
+    type="file"
+    name="files[]"
+    multiple
+    accept=".xlsx,.xls,.csv,.txt"
+    class="hidden"
+    onchange="importExcel()"
+>
+    </form>
+
+    {{-- <!-- SYNC -->
+    <button
+        id="syncBtn"
+        onclick="syncSpreadsheet()"
+        class="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-2xl font-semibold transition flex items-center gap-2"
+    >
+        <i
+            data-lucide="refresh-cw"
+            class="w-4 h-4"
+        ></i>
+
+        Sync Sekarang
+    </button> --}}
+
+</div>
+
+    </div>
+
+</div>
+
 
             <!-- STATS -->
             <div class="grid grid-cols-2 xl:grid-cols-3 gap-4">
@@ -158,7 +216,7 @@
                             </p>
 
                             <h3 class="text-3xl font-bold text-green-600 mt-3">
-                                {{ $sudahBayar }}
+                                {{ $sudah_bayar }}
                             </h3>
 
                         </div>
@@ -280,7 +338,7 @@
                                 </div>
 
                                 <span class="font-bold text-green-600 text-sm">
-                                    {{ $sudahBayar }}
+                                    {{ $sudah_bayar }}
                                 </span>
 
                             </div>
@@ -289,7 +347,7 @@
 
                                 <div
                                     class="bg-green-500 h-full rounded-full"
-                                    style="width: {{ $totalData > 0 ? ($sudahBayar / $totalData) * 100 : 0 }}%"
+                                    style="width: {{ $totalData > 0 ? ($sudah_bayar / $totalData) * 100 : 0 }}%"
                                 ></div>
 
                             </div>
@@ -351,11 +409,11 @@
                             <div class="bg-slate-50 rounded-2xl p-4">
 
                                 <p class="text-xs text-slate-500">
-                                    Lunas
+                                    Sudah Bayar
                                 </p>
 
                                 <h4 class="font-bold text-xl text-green-600 mt-1">
-                                    {{ $sudahBayar }}
+                                    {{ $sudah_bayar }}
                                 </h4>
 
                             </div>
@@ -380,7 +438,7 @@
                         </h3>
 
                         <p class="text-sm text-slate-500 mt-1">
-                            Data kendaraan hasil import
+                            Data kendaraan hasil import file
                         </p>
 
                     </div>
@@ -524,25 +582,19 @@
                                                 $status = strtoupper($item->status_bayar ?? 'BELUM');
                                             @endphp
 
-                                            @if($status == 'LUNAS')
+                                           @if($status == 'SUDAH BAYAR')
 
-                                                <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-semibold">
-                                                    LUNAS
-                                                </span>
+    <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-semibold">
+        SUDAH BAYAR
+    </span>
 
-                                            @elseif($status == 'DP')
+@else
 
-                                                <span class="bg-orange-100 text-orange-600 px-3 py-1 rounded-full text-xs font-semibold">
-                                                    DP
-                                                </span>
+    <span class="bg-red-100 text-red-600 px-3 py-1 rounded-full text-xs font-semibold">
+        BELUM BAYAR
+    </span>
 
-                                            @else
-
-                                                <span class="bg-red-100 text-red-600 px-3 py-1 rounded-full text-xs font-semibold">
-                                                    BELUM
-                                                </span>
-
-                                            @endif
+@endif
 
                                         </td>
                                         <!-- METODE PEMBAYARAN -->
@@ -552,7 +604,7 @@
         $metode = strtolower($item->metode_pembayaran ?? '');
     @endphp
 
-    @if($status !== 'LUNAS')
+    @if($status !== 'SUDAH BAYAR')
 
         <span class="text-slate-400 text-sm">
             -
@@ -645,62 +697,413 @@
     </div>
 
     <!-- APEXCHART -->
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 
-    <script>
+<!-- SWEET ALERT -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-        const options = {
+<script>
 
-            chart: {
-                type: 'bar',
-                height: 260,
-                toolbar: {
-                    show: false
-                },
-                fontFamily: 'Figtree'
-            },
+    /*
+    |--------------------------------------------------------------------------
+    | CHART
+    |--------------------------------------------------------------------------
+    */
 
-            series: [{
-                name: 'Jumlah',
-                data: [
-                    {{ $sudahBayar }},
-                    {{ $belumBayar }}
-                ]
-            }],
+    const options = {
 
-            xaxis: {
-                categories: [
-                    'LUNAS',
-                    'BELUM'
-                ]
-            },
-
-            dataLabels: {
-                enabled: false
-            },
-
-            legend: {
+        chart: {
+            type: 'bar',
+            height: 260,
+            toolbar: {
                 show: false
             },
+            fontFamily: 'Figtree'
+        },
 
-            colors: ['#2563EB'],
+        series: [{
+            name: 'Jumlah',
+            data: [
+                {{ $sudah_bayar }},
+                {{ $belumBayar }}
+            ]
+        }],
 
-            plotOptions: {
-                bar: {
-                    borderRadius: 10,
-                    columnWidth: '45%'
-                }
+        xaxis: {
+            categories: [
+                'SUDAH BAYAR',
+                'BELUM BAYAR'
+            ]
+        },
+
+        dataLabels: {
+            enabled: false
+        },
+
+        legend: {
+            show: false
+        },
+
+        colors: ['#2563EB'],
+
+        plotOptions: {
+            bar: {
+                borderRadius: 10,
+                columnWidth: '45%'
             }
+        }
 
-        };
+    };
 
-        const chart = new ApexCharts(
+    const chart =
+        new ApexCharts(
             document.querySelector("#chart"),
             options
         );
 
-        chart.render();
+    chart.render();
 
-    </script>
+
+    /*
+    |--------------------------------------------------------------------------
+    | SYNC SPREADSHEET
+    |--------------------------------------------------------------------------
+    */
+
+   /* async function syncSpreadsheet() {
+
+        const btn =
+            document.getElementById(
+                'syncBtn'
+            );
+
+        btn.disabled = true;
+
+        btn.innerHTML =
+            'Syncing...';
+
+        Swal.fire({
+            title:
+                'Sinkronisasi Data',
+            text:
+                'Sedang mengambil data spreadsheet...',
+            allowOutsideClick:
+                false,
+            allowEscapeKey:
+                false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        try {
+
+            const response =
+                await fetch(
+                    '/api/sync-spreadsheet'
+                );
+
+            const result =
+                await response.json();
+
+            Swal.close();
+
+            if (
+                result.success
+            ) {
+
+                Swal.fire({
+
+                    icon:
+                        'success',
+
+                    title:
+                        'Sync Berhasil',
+
+                    html: `
+                        <div style="font-size:14px">
+                            <p>Total data:</p>
+
+                            <h2 style="
+                                font-size:32px;
+                                font-weight:700;
+                                color:#2563EB;
+                                margin-top:8px;
+                            ">
+                                ${result.total}
+                            </h2>
+                        </div>
+                    `,
+
+                    confirmButtonText:
+                        'OK',
+
+                    confirmButtonColor:
+                        '#2563EB',
+
+                    borderRadius:
+                        24
+
+                }).then(() => {
+
+                    location.reload();
+
+                });
+
+            } else {
+
+                Swal.fire({
+
+                    icon:
+                        'error',
+
+                    title:
+                        'Sync Gagal',
+
+                    text:
+                        result.message
+                        ||
+                        'Sync gagal',
+
+                    confirmButtonColor:
+                        '#DC2626',
+
+                    borderRadius:
+                        24
+                });
+            }
+
+        } catch (error) {
+
+            console.error(
+                error
+            );
+
+            Swal.fire({
+
+                icon:
+                    'error',
+
+                title:
+                    'Oops...',
+
+                text:
+                    'Terjadi kesalahan',
+
+                confirmButtonColor:
+                    '#DC2626',
+
+                borderRadius:
+                    24
+            });
+
+        } finally {
+
+            btn.disabled =
+                false;
+
+            btn.innerHTML =
+                'Sync Sekarang';
+        }
+    }*/
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | IMPORT EXCEL
+    |--------------------------------------------------------------------------
+    */
+
+    async function importExcel() {
+
+        const fileInput =
+            document.getElementById(
+                'excelFile'
+            );
+
+        if (
+            !fileInput.files.length
+        ) {
+            return;
+        }
+
+        const formData =
+            new FormData();
+
+        for (
+    let i = 0;
+    i < fileInput.files.length;
+    i++
+) {
+    formData.append(
+        'files[]',
+        fileInput.files[i]
+    );
+}
+
+        const btn =
+            document.querySelector(
+                'label[for="excelFile"]'
+            );
+
+        const oldText =
+            btn.innerHTML;
+
+        btn.innerHTML =
+            'Importing...';
+
+        btn.style.pointerEvents =
+            'none';
+
+        Swal.fire({
+
+            title:
+                'Import Data',
+
+            text:
+                'Sedang memproses file...',
+
+            allowOutsideClick:
+                false,
+
+            allowEscapeKey:
+                false,
+
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        try {
+
+            const response =
+                await fetch(
+                    '/import-excel',
+                    {
+                        method:
+                            'POST',
+
+                        headers: {
+                            'X-CSRF-TOKEN':
+                                document
+                                    .querySelector(
+                                        'meta[name="csrf-token"]'
+                                    )
+                                    .content
+                        },
+
+                        body:
+                            formData
+                    }
+                );
+
+            const result =
+                await response.json();
+
+            Swal.close();
+
+            if (
+                result.success
+            ) {
+
+                Swal.fire({
+
+                    icon:
+                        'success',
+
+                    title:
+                        'Import data berhasil',
+
+                    html: `
+                        <div style="font-size:14px">
+                            <p>Total data:</p>
+
+                            <h2 style="
+                                font-size:32px;
+                                font-weight:700;
+                                color:#2563EB;
+                                margin-top:8px;
+                            ">
+                                ${result.total}
+                            </h2>
+                        </div>
+                    `,
+
+                    confirmButtonText:
+                        'OK',
+
+                    confirmButtonColor:
+                        '#2563EB',
+
+                    borderRadius:
+                        24
+
+                }).then(() => {
+
+                    location.reload();
+
+                });
+
+            } else {
+
+                Swal.fire({
+
+                    icon:
+                        'error',
+
+                    title:
+                        'Import Gagal',
+
+                    text:
+                        result.message
+                        ||
+                        'Import gagal',
+
+                    confirmButtonColor:
+                        '#DC2626',
+
+                    borderRadius:
+                        24
+                });
+            }
+
+        } catch (error) {
+
+            console.error(
+                error
+            );
+
+            Swal.fire({
+
+                icon:
+                    'error',
+
+                title:
+                    'Oops...',
+
+                text:
+                    'Terjadi kesalahan saat import',
+
+                confirmButtonColor:
+                    '#DC2626',
+
+                borderRadius:
+                    24
+            });
+
+        } finally {
+
+            btn.innerHTML =
+                oldText;
+
+            btn.style.pointerEvents =
+                'auto';
+
+            fileInput.value =
+                '';
+        }
+    }
+
+</script>
 
 </x-app-layout>

@@ -1,3 +1,4 @@
+{{-- laporan blade --}}
 <x-app-layout>
 
     <x-slot name="header">
@@ -61,11 +62,11 @@
                 <div class="card-ui rounded-[28px] p-5">
 
                     <p class="text-sm text-slate-500">
-                        Total Lunas
+                        Total Sudah Bayar
                     </p>
 
                     <h3 class="text-3xl font-bold text-green-600 mt-2">
-                        {{ number_format($totalLunas) }}
+                        {{ number_format($totalsudah_bayar) }}
                     </h3>
 
                 </div>
@@ -197,11 +198,12 @@
                                     </th>
 
                                     <th class="px-4 py-4 text-center">
-                                        Lunas
+                                        Sudah Bayar
                                     </th>
 
                                     <th class="px-4 py-4 text-center">
-                                        Belum
+                                        Belum Bayar
+
                                     </th>
 
                                     <th class="px-4 py-4 text-center">
@@ -271,7 +273,7 @@
                                     </td>
 
                                     <td class="text-center text-green-600 font-bold">
-                                        {{ $item->lunas }}
+                                        {{ $item->sudah_bayar }}
                                     </td>
 
                                     <td class="text-center text-red-500 font-bold">

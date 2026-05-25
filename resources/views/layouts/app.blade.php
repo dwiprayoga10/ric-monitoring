@@ -8,7 +8,16 @@
 
     <title>SIM SWDKLLJ - Jasa Raharja Jawa Tengah</title>
 
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+<link
+    rel="icon"
+    type="image/png"
+    href="{{ asset('images/logo.png') }}"
+>
+
+@vite([
+    'resources/css/app.css',
+    'resources/js/app.js'
+])
 
     <!-- Font -->
     <link rel="preconnect" href="https://fonts.bunny.net">

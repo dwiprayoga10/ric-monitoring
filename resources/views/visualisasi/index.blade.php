@@ -57,15 +57,15 @@
                     </p>
 
                     <h3 class="text-4xl font-bold text-slate-800 mt-2">
-                        {{ $totalLunas }}
+                        {{ $totalsudah_bayar }}
                     </h3>
 
                     <p class="text-sm text-slate-500">
-                        Kendaraan Lunas
+                        Kendaraan Sudah Bayar
                     </p>
                     <div class="mt-3 inline-flex items-center gap-2 bg-green-100 text-green-700 px-4 py-2 rounded-xl text-sm font-semibold">
 
-    Rp {{ number_format($totalNominalLunas, 0, ',', '.') }}
+    Rp {{ number_format($totalNominalsudah_bayar, 0, ',', '.') }}
 
 </div>
                 </div>
@@ -131,7 +131,7 @@
                     </h3>
 
                     <p class="text-sm text-slate-500">
-                        Kendaraan Belum Lunas
+                        Kendaraan Belum Bayar
                     </p>
                     <div class="mt-3 inline-flex items-center gap-2 bg-red-100 text-red-700 px-4 py-2 rounded-xl text-sm font-semibold">
 
@@ -236,7 +236,7 @@
 
             <!-- ANALYTICS -->
             <!-- ANALYTICS -->
-<div class="grid grid-cols-1 xl:grid-cols-3 gap-5">
+<div class="grid grid-cols-1 xl:grid-cols-2 gap-5">
 
                 <!-- PIE CHART -->
                 <div class="bg-white rounded-[32px] border border-slate-200 p-6 shadow-sm">
@@ -274,7 +274,7 @@
         </p>
 
         <h4 class="font-bold text-green-600 mt-1">
-            Rp {{ number_format($totalNominalLunas, 0, ',', '.') }}
+            Rp {{ number_format($totalNominalsudah_bayar, 0, ',', '.') }}
         </h4>
 
     </div>
@@ -295,79 +295,10 @@
 
                 </div>
 
-                <!-- STATUS KEPEMILIKAN -->
-<div class="bg-white rounded-[32px] border border-slate-200 p-6 shadow-sm">
+            
 
-    <div class="flex items-center justify-between mb-5">
 
-        <div>
-
-            <h3 class="text-xl font-bold text-slate-800">
-                Status Kendaraan
-            </h3>
-
-            <p class="text-sm text-slate-500 mt-1">
-                Distribusi status kendaraan
-            </p>
-
-        </div>
-
-        <div class="h-14 w-14 rounded-2xl bg-cyan-100 flex items-center justify-center">
-
-            <i data-lucide="car" class="w-6 h-6 text-cyan-600"></i>
-
-        </div>
-
-    </div>
-
-    <div id="kepemilikanChart"></div>
-
-    <div class="mt-6 grid grid-cols-2 xl:grid-cols-4 gap-3">
-
-    @foreach($kepemilikanChart as $index => $item)
-
-        @php
-            $colors = [
-    'bg-sky-500',      // Dimiliki (314 - 69.6%)
-    'bg-emerald-500', // Dijual (97 - 21.5%)
-    'bg-amber-500',   // Lainnya (18 - 4.0%)
-    'bg-violet-500',  // Ganti Kepemilikan (15 - 3.3%)
-    'bg-red-500',     // Ganti Alamat (4)
-    'bg-slate-600',   // Rusak Berat (1)
-    'bg-yellow-500',  // Hilang (1)
-    'bg-cyan-500'     // Alamat tidak ditemukan (1)
-];
-
-            $color = $colors[$index % count($colors)];
-        @endphp
-
-        <div class="bg-slate-50 rounded-2xl px-4 py-3 border border-slate-100">
-
-            <div class="flex items-center justify-between">
-
-                <div class="flex items-center gap-3">
-
-                    <span class="w-3 h-3 rounded-full {{ $color }}"></span>
-
-                    <span class="text-[13px] font-medium text-slate-700">
-                        {{ $item->status }}
-                    </span>
-
-                </div>
-
-                <span class="font-bold text-slate-800 text-sm">
-                    {{ number_format($item->total) }}
-                </span>
-
-            </div>
-
-        </div>
-
-    @endforeach
-
-</div>
-
-</div>
+ 
 
                 <!-- PETUGAS -->
                 <div class="bg-white rounded-[32px] border border-slate-200 p-6 shadow-sm">
@@ -443,6 +374,577 @@
 
             </div>
 
+
+            <!-- STATUS KENDARAAN FULL -->
+<div class="
+    bg-white
+    rounded-[32px]
+    border
+    border-slate-200
+    p-6
+    shadow-sm
+">
+
+    <div class="
+        flex
+        flex-col
+        lg:flex-row
+        lg:items-start
+        lg:justify-between
+        gap-6
+    ">
+
+        <!-- HEADER -->
+        <div>
+
+            <div class="
+                flex
+                items-center
+                gap-4
+            ">
+
+                <div class="
+                    h-16 w-16
+                    rounded-[22px]
+                    bg-cyan-100
+                    flex
+                    items-center
+                    justify-center
+                ">
+
+                    <i
+                        data-lucide="car"
+                        class="w-7 h-7 text-cyan-600"
+                    ></i>
+
+                </div>
+
+                <div>
+
+                    <h3 class="
+                        text-2xl
+                        font-bold
+                        text-slate-800
+                    ">
+                        Status Kepemilikan
+                    </h3>
+
+                    <p class="
+                        text-sm
+                        text-slate-500
+                        mt-1
+                    ">
+                        Hasil sebaran dan
+                        progres kerja seluruh
+                        petugas RIC
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- CONTENT -->
+<div class="
+    grid
+    grid-cols-1
+    xl:grid-cols-2
+    gap-6
+    mt-8
+    items-center
+">
+
+    <div class="
+    flex
+    justify-center
+    items-center
+    rounded-[30px]
+    border
+    border-slate-100
+    bg-slate-50
+    min-h-[520px]
+">
+
+        <div class="w-full max-w-[500px]">
+            <div id="kepemilikanChart"></div>
+
+            <div class="
+    flex
+    justify-center
+    gap-3
+    mt-3
+">
+
+    <div class="
+        bg-slate-100
+        rounded-2xl
+        px-4
+        py-3
+        text-center
+        min-w-[150px]
+    ">
+
+        <p class="
+            text-xs
+            text-slate-500
+        ">
+            Status Terbanyak
+        </p>
+
+        <h4 class="
+            text-sm
+            font-bold
+            text-slate-800
+            mt-1
+        ">
+            {{
+                $statusDominan?->status
+            }}
+        </h4>
+
+    </div>
+
+    <div class="
+        bg-slate-100
+        rounded-2xl
+        px-4
+        py-3
+        text-center
+        min-w-[150px]
+    ">
+
+        <p class="
+            text-xs
+            text-slate-500
+        ">
+            Total Petugas
+        </p>
+
+        <h4 class="
+            text-sm
+            font-bold
+            text-slate-800
+            mt-1
+        ">
+            {{
+                $totalPetugasAktif
+            }}
+            RIC
+        </h4>
+
+    </div>
+
+</div>
+        </div>
+
+    </div>
+
+    <!-- AKUMULASI -->
+    <div class="
+        rounded-[30px]
+        bg-gradient-to-br
+        from-cyan-600
+        via-blue-600
+        to-indigo-700
+        p-6
+        shadow-lg
+        text-white
+    ">
+
+        <!-- HEADER -->
+        <div class="
+            flex
+            items-start
+            justify-between
+        ">
+
+            <div>
+
+                <p class="
+                    text-cyan-100
+                    text-xs
+                    uppercase
+                    tracking-[0.2em]
+                    font-semibold
+                ">
+                    Akumulasi Sebaran RIC
+                </p>
+
+                <div class="
+                    flex
+                    items-end
+                    gap-3
+                    mt-3
+                ">
+
+                    <h2 class="
+                        text-5xl
+                        font-black
+                        leading-none
+                    ">
+                        {{
+                            number_format(
+                                $totalKerjaRic
+                            )
+                        }}
+                    </h2>
+
+                    <div class="pb-1">
+
+                        <p class="
+                            text-cyan-100
+                            text-sm
+                        ">
+                            Total Kendaraan
+                        </p>
+
+                        <p class="
+                            text-cyan-200
+                            text-xs
+                        ">
+                            Sudah diproses petugas RIC
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="
+                w-14
+                h-14
+                rounded-[20px]
+                bg-white/15
+                backdrop-blur-sm
+                flex
+                items-center
+                justify-center
+            ">
+
+                <i
+                    data-lucide="activity"
+                    class="w-6 h-6 text-white"
+                ></i>
+
+            </div>
+
+        </div>
+
+        <!-- STATS -->
+        <div class="
+            grid
+            grid-cols-2
+            gap-3
+            mt-5
+        ">
+
+            <div class="
+                bg-white/10
+                border
+                border-white/10
+                rounded-2xl
+                p-4
+            ">
+
+                <p class="
+                    text-xs
+                    text-cyan-100
+                ">
+                    Progress
+                </p>
+
+                <h4 class="
+                    text-2xl
+                    font-bold
+                    mt-1
+                ">
+                    {{
+                        $persenKerjaRic
+                    }}%
+                </h4>
+
+            </div>
+
+            <div class="
+                bg-white/10
+                border
+                border-white/10
+                rounded-2xl
+                p-4
+            ">
+
+                <p class="
+                    text-xs
+                    text-cyan-100
+                ">
+                    Target
+                </p>
+
+                <h4 class="
+                    text-2xl
+                    font-bold
+                    mt-1
+                ">
+                    {{
+                        number_format(
+                            $totalTargetRic
+                        )
+                    }}
+                </h4>
+
+            </div>
+
+        </div>
+
+        <!-- INSIGHT -->
+<div class="
+    grid
+    grid-cols-3
+    gap-3
+    mt-4
+">
+
+    <!-- PETUGAS -->
+    <div class="
+        bg-white/10
+        border
+        border-white/10
+        rounded-2xl
+        p-4
+        text-center
+    ">
+
+        <p class="
+            text-xs
+            text-cyan-100
+        ">
+            RIC Bertugas
+        </p>
+
+        <h4 class="
+            text-xl
+            font-bold
+            mt-1
+        ">
+            {{
+                $totalPetugasAktif
+            }}
+        </h4>
+
+    </div>
+
+    <!-- STATUS DOMINAN -->
+    <div class="
+        bg-white/10
+        border
+        border-white/10
+        rounded-2xl
+        p-4
+        text-center
+    ">
+
+        <p class="
+            text-xs
+            text-cyan-100
+        ">
+            Terbanyak
+        </p>
+
+        <h4 class="
+            text-sm
+            font-bold
+            mt-1
+        ">
+            {{
+                $statusDominan?->status
+            }}
+        </h4>
+
+    </div>
+
+    <!-- SISA -->
+    <div class="
+        bg-white/10
+        border
+        border-white/10
+        rounded-2xl
+        p-4
+        text-center
+    ">
+
+        <p class="
+            text-xs
+            text-cyan-100
+        ">
+            Belum Dikerjakan
+        </p>
+
+        <h4 class="
+            text-xl
+            font-bold
+            mt-1
+        ">
+            {{
+                number_format(
+                    $sisaPengerjaan
+                )
+            }}
+        </h4>
+
+    </div>
+
+</div>
+
+        <!-- RINCIAN -->
+        <div class="mt-5">
+
+            <div class="
+                flex
+                justify-between
+                mb-4
+            ">
+
+                <h4 class="
+                    text-sm
+                    font-semibold
+                    text-cyan-100
+                ">
+                    Rincian Sebaran
+                </h4>
+
+                <span class="
+                    text-xs
+                    text-cyan-200
+                ">
+                    Total
+                    {{
+                        number_format(
+                            $totalKerjaRic
+                        )
+                    }}
+                </span>
+
+            </div>
+
+            <div class="
+                space-y-2
+                max-h-[260px]
+                overflow-y-auto
+                pr-1
+            ">
+
+                @php
+    $statusColors = [
+
+        'Dimiliki' =>
+            '#0ea5e9',
+
+        'Dijual' =>
+            '#10b981',
+
+        'Lainnya' =>
+            '#f59e0b',
+
+        'Ganti Alamat' =>
+            '#8b5cf6',
+
+        'Ganti Kepemilikan' =>
+            '#ef4444',
+
+        'Alamat tidak ditemukan' =>
+            '#475569',
+
+        'Rusak Berat' =>
+            '#eab308',
+
+        'Hilang' =>
+            '#06b6d4',
+
+    ];
+@endphp
+
+@foreach(
+    $kepemilikanChart
+    as $item
+)
+
+    @php
+        $color =
+            $statusColors[
+                $item->status
+            ] ?? '#94a3b8';
+    @endphp
+
+    <div class="
+        flex
+        justify-between
+        items-center
+        rounded-xl
+        bg-white/10
+        px-4
+        py-3
+        border
+        border-white/10
+    ">
+
+        <div class="
+            flex
+            items-center
+            gap-3
+        ">
+
+            <!-- DOT WARNA -->
+            <span
+                class="
+                    w-3 h-3
+                    rounded-full
+                    shrink-0
+                "
+                style="
+                    background:
+                    {{ $color }};
+                "
+            ></span>
+
+            <span class="
+                text-sm
+                text-cyan-50
+                font-medium
+            ">
+                {{
+                    $item->status
+                }}
+            </span>
+
+        </div>
+
+        <span class="
+            font-bold
+            text-white
+        ">
+            {{
+                number_format(
+                    $item->total
+                )
+            }}
+        </span>
+
+    </div>
+
+@endforeach
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
             <!-- SOURCE FILE -->
             <div class="bg-white rounded-[32px] border border-slate-200 p-6 shadow-sm">
 
@@ -451,11 +953,11 @@
                     <div>
 
                         <h3 class="text-xl font-bold text-slate-800">
-                            Source File Import
+                            Source Data Spreadsheet
                         </h3>
 
                         <p class="text-sm text-slate-500 mt-1">
-                            Riwayat file yang diupload
+                            Data sinkronisasi Google Spreadsheet
                         </p>
 
                     </div>
@@ -487,11 +989,11 @@
 
 document.addEventListener('DOMContentLoaded', function () {
 
-    const totalLunas = Number({{ $totalNominalLunas ?? 0 }});
+    const  totalSudahBayar = Number({{ $totalNominalsudah_bayar ?? 0 }});
     const totalBelum = Number({{ $totalNominalBelum ?? 0 }});
 
     const pieSeries = [
-        totalLunas,
+         totalSudahBayar,
         totalBelum
     ];
 
@@ -621,7 +1123,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                                 formatter: function () {
 
-                                    return '{{ $totalLunas + $totalBelum }}';
+                                    return '{{ $totalsudah_bayar + $totalBelum }}';
                                 }
                             }
                         }
@@ -786,12 +1288,55 @@ document.addEventListener('DOMContentLoaded', function () {
             },
 
             plotOptions: {
-                pie: {
-                    donut: {
-                        size: '72%'
+    pie: {
+
+        expandOnClick: false,
+
+        donut: {
+
+            size: '72%',
+
+            labels: {
+
+                show: true,
+
+                name: {
+                    show: true,
+                    offsetY: 38,
+                    color: '#64748b',
+                    fontSize: '14px',
+                    fontWeight: 500
+                },
+
+                value: {
+                    show: true,
+                    fontSize: '42px',
+                    fontWeight: 800,
+                    color: '#0f172a',
+                    offsetY: -10,
+
+                    formatter: function () {
+
+                        return '{{ number_format($totalKerjaRic) }}';
+                    }
+                },
+
+                total: {
+                    show: true,
+                    label: 'Sudah Ditindaklanjuti',
+                    color: '#64748b',
+                    fontSize: '14px',
+                    fontWeight: 500,
+
+                    formatter: function () {
+
+                        return '{{ $persenKerjaRic }}%';
                     }
                 }
-            },
+            }
+        }
+    }
+},
 
             noData: {
                 text: 'Belum ada data'
